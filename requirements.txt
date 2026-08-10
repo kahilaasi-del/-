@@ -1,0 +1,14 @@
+# חיבור SQL Server
+pyodbc>=5.0
+SQLAlchemy>=2.0
+
+# עיבוד נתונים
+pandas>=2.0
+pyarrow>=14.0          # שמירת Parquet
+python-dotenv>=1.0
+PyYAML>=6.0
+
+# ניתוח וויזואליזציה
+plotly>=5.18
+streamlit>=1.30
+openpyxl>=3.1          # ייצוא/קריאת Excel

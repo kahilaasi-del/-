@@ -1,0 +1,24 @@
+# סודות — לעולם לא ל-git
+.env
+*.env
+!.env.example
+
+# פלטי נתונים (עלולים להכיל מידע עסקי רגיש)
+data/
+!data/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# עורכים / מערכת
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
