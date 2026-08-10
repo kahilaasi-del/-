@@ -162,16 +162,16 @@ def write_excel(m: pd.DataFrame, path: Path) -> None:
           ["אזור", "לקוחות", "פעילים", "בסיכון", "מכירות", "רווח"], money=("sales", "profit"))
 
     risk = m[m["risk"]].sort_values("sales", ascending=False)
-    sheet("בסיכון לפעולה", risk, ["name", "status", "region", "city", "addr", "sales", "last_m", "lastvisit"],
-          ["שם לקוח", "סטטוס", "אזור", "עיר", "כתובת", "מכירות 2026", "חודש אחרון", "ביקור אחרון"], money=("sales",))
+    sheet("בסיכון לפעולה", risk, ["name", "key", "status", "region", "city", "addr", "sales", "last_m", "lastvisit"],
+          ["שם לקוח", "מס לקוח", "סטטוס", "אזור", "עיר", "כתובת", "מכירות 2026", "חודש אחרון", "ביקור אחרון"], money=("sales",))
 
     route = m.sort_values(["day", "group", "sales"], ascending=[True, True, False])
-    sheet("מסלול לפי יום", route, ["day", "group", "name", "city", "addr", "status", "sales", "freq"],
-          ["יום", "אזור מסלול", "שם לקוח", "עיר", "כתובת", "סטטוס", "מכירות", "תדירות"], money=("sales",))
+    sheet("מסלול לפי יום", route, ["day", "group", "name", "key", "city", "addr", "status", "sales", "freq"],
+          ["יום", "אזור מסלול", "שם לקוח", "מס לקוח", "עיר", "כתובת", "סטטוס", "מכירות", "תדירות"], money=("sales",))
 
     allc = m.sort_values("sales", ascending=False)
-    sheet("כל הלקוחות", allc, ["name", "region", "city", "addr", "status", "sales", "profit", "margin", "last_m", "key"],
-          ["שם לקוח", "אזור", "עיר", "כתובת", "סטטוס", "מכירות", "רווח", "% רווח", "חודש אחרון", "מס לקוח"],
+    sheet("כל הלקוחות", allc, ["name", "key", "region", "city", "addr", "status", "sales", "profit", "margin", "last_m"],
+          ["שם לקוח", "מס לקוח", "אזור", "עיר", "כתובת", "סטטוס", "מכירות", "רווח", "% רווח", "חודש אחרון"],
           money=("sales", "profit"))
     wb.save(path)
 
