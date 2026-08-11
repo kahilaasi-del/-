@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 import numpy as np
@@ -75,6 +76,45 @@ def build_customer_table(sales_csv: str, current_month: int | None = None) -> pd
     return c
 
 
+def parse_visits(xlsx_path: str, today: pd.Timestamp | None = None) -> pd.DataFrame:
+    """מסכם דוח ביקורים (אסקי) לרמת לקוח: עיר, ביקור אחרון, מס' ביקורים, תדירות.
+
+    מצפה לעמודות: לקוח (עם מספר בתחילת המחרוזת), עיר, תאריך.
+    """
+    today = today or pd.Timestamp.today().normalize()
+    v = pd.read_excel(xlsx_path, header=0)
+    v.columns = [str(c).strip() for c in v.columns]
+    v["key"] = v["לקוח"].astype(str).str.extract(r"^\s*(\d+)")
+    v["date"] = pd.to_datetime(v["תאריך"], errors="coerce", dayfirst=True)
+    v = v.dropna(subset=["key", "date"])
+
+    def _gap(dates: pd.Series) -> float:
+        d = dates.sort_values()
+        return round((d.max() - d.min()).days / (len(d) - 1), 1) if len(d) > 1 else np.nan
+
+    def _city(x: pd.Series) -> str:
+        val = x.mode().iloc[0] if len(x.mode()) else x.iloc[0]
+        return re.sub(r"\s+", " ", re.sub(r"[0-9\-]", "", str(val))).strip() or "—"
+
+    g = v.groupby("key").agg(city=("עיר", _city), last_visit=("date", "max"),
+                             n_visits=("date", "size")).reset_index()
+    g = g.merge(v.groupby("key")["date"].apply(_gap).rename("visit_gap").reset_index(), on="key", how="left")
+    g["days_since_visit"] = (today - g["last_visit"]).dt.days
+    g["last_visit"] = g["last_visit"].dt.strftime("%d/%m/%Y")
+    return g
+
+
+def enrich_with_visits(c: pd.DataFrame, visits: pd.DataFrame) -> pd.DataFrame:
+    """מוסיף לטבלת הלקוחות את נתוני הביקורים לפי מפתח לקוח."""
+    m = c.merge(visits, on="key", how="left")
+    m["city"] = m["city"].fillna("—")
+    m["last_visit"] = m["last_visit"].fillna("—")
+    m["n_visits"] = m["n_visits"].fillna(0).astype(int)
+    m["days_since_visit"] = m["days_since_visit"].apply(lambda x: int(x) if pd.notna(x) else "")
+    m["visit_gap"] = m["visit_gap"].apply(lambda x: x if pd.notna(x) else "")
+    return m
+
+
 def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -89,7 +129,9 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
              "בסכנת נטישה": "FCD5B4", "נטש": "FFC7CE"}
     W = {"name": 34, "key": 9, "sales": 13, "profit": 12, "margin": 8, "last_m": 9,
          "last_month_name": 12, "months_since": 15, "months": 11, "status": 13,
-         "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8}
+         "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8,
+         "city": 14, "last_visit": 12, "days_since_visit": 14, "n_visits": 10, "visit_gap": 12}
+    has_visits = "city" in c.columns
 
     def emit(ws, df, cols, headers, money=(), color_status=False):
         ws.sheet_view.rightToLeft = True
@@ -119,14 +161,31 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
     ag["active"] = ag["active"].astype(int)
     ag["risk"] = ag["risk"].astype(int)
     ag["margin"] = np.where(ag["sales"] > 0, (ag["profit"] / ag["sales"] * 100).round(1), 0)
-    emit(wb.create_sheet("השוואת סוכנים"), ag,
-         ["seg", "agent", "customers", "active", "risk", "sales", "profit", "margin"],
-         ["חתך", "סוכן", "לקוחות", "פעילים", "בסיכון", "מכירות", "רווח", "% רווח"],
-         money=("sales", "profit"))
+    if has_visits:
+        ag["cities"] = c.groupby(["seg", "agent"])["city"].nunique().reindex(
+            list(zip(ag["seg"], ag["agent"]))).values
+        emit(wb.create_sheet("השוואת סוכנים"), ag,
+             ["seg", "agent", "customers", "cities", "active", "risk", "sales", "profit", "margin"],
+             ["חתך", "סוכן", "לקוחות", "ערים", "פעילים", "בסיכון", "מכירות", "רווח", "% רווח"],
+             money=("sales", "profit"))
+        cols = ["name", "key", "city", "sales", "profit", "margin", "last_month_name",
+                "last_visit", "days_since_visit", "n_visits", "visit_gap", "status"]
+        heads = ["שם לקוח", "מס לקוח", "עיר", "מכירות", "רווח", "% רווח", "חודש מכירה",
+                 "ביקור אחרון", "ימים מאז ביקור", "מס' ביקורים", "תדירות (ימים)", "סטטוס"]
+        sort_by = ["city", "sales"]
+        sort_asc = [True, False]
+    else:
+        emit(wb.create_sheet("השוואת סוכנים"), ag,
+             ["seg", "agent", "customers", "active", "risk", "sales", "profit", "margin"],
+             ["חתך", "סוכן", "לקוחות", "פעילים", "בסיכון", "מכירות", "רווח", "% רווח"],
+             money=("sales", "profit"))
+        cols = ["name", "key", "sales", "profit", "margin", "last_month_name", "months_since", "months", "status"]
+        heads = ["שם לקוח", "מס לקוח", "מכירות", "רווח", "% רווח", "חודש אחרון", "חודשים מאז קנייה", "חודשים פעיל", "סטטוס"]
+        sort_by, sort_asc = ["sales"], [False]
 
     used = set()
     for _, a in ag.iterrows():
-        sub = c[(c["seg"] == a["seg"]) & (c["agent"] == a["agent"])].sort_values("sales", ascending=False)
+        sub = c[(c["seg"] == a["seg"]) & (c["agent"] == a["agent"])].sort_values(sort_by, ascending=sort_asc)
         if len(sub) < min_customers:
             continue
         code = str(a["seg"]).replace("^", "") or "?"
@@ -136,16 +195,14 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
             k += 1
             nm = f"{base[:28]}_{k}"
         used.add(nm)
-        emit(wb.create_sheet(nm), sub,
-             ["name", "key", "sales", "profit", "margin", "last_month_name", "months_since", "months", "status"],
-             ["שם לקוח", "מס לקוח", "מכירות", "רווח", "% רווח", "חודש אחרון", "חודשים מאז קנייה", "חודשים פעיל", "סטטוס"],
-             money=("sales", "profit"), color_status=True)
+        emit(wb.create_sheet(nm), sub, cols, heads, money=("sales", "profit"), color_status=True)
     wb.save(path)
 
 
 def main() -> None:
     p = argparse.ArgumentParser(description="ניתוח כל הסוכנים מקובץ מכירות")
     p.add_argument("--sales", required=True, help="קובץ מכירות CSV (כל הסוכנים)")
+    p.add_argument("--visits", default=None, help="דוח ביקורים XLSX (אסקי) — להעשרה בעיר/ביקורים")
     p.add_argument("--out", default="data/agents", help="תיקיית פלט")
     p.add_argument("--current-month", type=int, default=None)
     p.add_argument("--min-customers", type=int, default=10, help="מינימום לקוחות לגליון סוכן נפרד")
@@ -154,6 +211,9 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     c = build_customer_table(args.sales, args.current_month)
+    if args.visits:
+        c = enrich_with_visits(c, parse_visits(args.visits))
+        print(f"  הועשר מדוח ביקורים: {int((c['city'] != '—').sum())} לקוחות עם עיר")
     c.to_csv(out / "customers.csv", index=False, encoding="utf-8-sig")
     write_excel(c, out / "all_agents.xlsx", args.min_customers)
     n_agents = c.groupby(["seg", "agent"]).ngroups
