@@ -23,6 +23,8 @@ RECENT_MONTHS = [6, 7, 8]
 EARLIER_MONTHS = [3, 4, 5]
 ACTIVE = {"בעלייה", "יציב", "בירידה"}
 RISK = {"בסכנת נטישה", "נטש"}
+MONTH_HE = {1: "ינואר", 2: "פברואר", 3: "מרץ", 4: "אפריל", 5: "מאי", 6: "יוני",
+            7: "יולי", 8: "אוגוסט", 9: "ספטמבר", 10: "אוקטובר", 11: "נובמבר", 12: "דצמבר"}
 
 
 def _compute_status(last_m: int, recent: float, earlier: float, current_month: int) -> str:
@@ -65,6 +67,8 @@ def build_customer_table(sales_csv: str, current_month: int | None = None) -> pd
         })
     c = pd.DataFrame(recs)
     c["margin"] = np.where(c["sales"] > 0, (c["profit"] / c["sales"] * 100).round(1), 0)
+    c["last_month_name"] = c["last_m"].map(MONTH_HE)
+    c["months_since"] = cur - c["last_m"]   # חודשים מאז הקנייה האחרונה
     c["status"] = c.apply(lambda r: _compute_status(r["last_m"], r["recent"], r["earlier"], cur), axis=1)
     c["active"] = c["status"].isin(ACTIVE)
     c["risk"] = c["status"].isin(RISK)
@@ -84,7 +88,8 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
     STCOL = {"בעלייה": "C6EFCE", "יציב": "C6EFCE", "בירידה": "FFEB9C",
              "בסכנת נטישה": "FCD5B4", "נטש": "FFC7CE"}
     W = {"name": 34, "key": 9, "sales": 13, "profit": 12, "margin": 8, "last_m": 9,
-         "months": 9, "status": 13, "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8}
+         "last_month_name": 12, "months_since": 15, "months": 11, "status": 13,
+         "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8}
 
     def emit(ws, df, cols, headers, money=(), color_status=False):
         ws.sheet_view.rightToLeft = True
@@ -132,8 +137,8 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
             nm = f"{base[:28]}_{k}"
         used.add(nm)
         emit(wb.create_sheet(nm), sub,
-             ["name", "key", "sales", "profit", "margin", "last_m", "months", "status"],
-             ["שם לקוח", "מס לקוח", "מכירות", "רווח", "% רווח", "חודש אחרון", "חודשים פעיל", "סטטוס"],
+             ["name", "key", "sales", "profit", "margin", "last_month_name", "months_since", "months", "status"],
+             ["שם לקוח", "מס לקוח", "מכירות", "רווח", "% רווח", "חודש אחרון", "חודשים מאז קנייה", "חודשים פעיל", "סטטוס"],
              money=("sales", "profit"), color_status=True)
     wb.save(path)
 
