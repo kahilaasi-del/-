@@ -70,6 +70,7 @@ def build_customer_table(sales_csv: str, current_month: int | None = None) -> pd
             "earlier": grp[grp["m"].isin(EARLIER_MONTHS)]["sales"].sum(),
         })
     c = pd.DataFrame(recs)
+    c["code"] = c["seg"].str.replace(r"\D", "", regex=True)   # מספר חתך נקי (כמו באסקי)
     c["margin"] = np.where(c["sales"] > 0, (c["profit"] / c["sales"] * 100).round(1), 0)
     c["last_month_name"] = c["last_m"].map(MONTH_HE)
     c["months_since"] = cur - c["last_m"]   # חודשים מאז הקנייה האחרונה
@@ -142,7 +143,7 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
              "בסכנת נטישה": "FCD5B4", "נטש": "FFC7CE"}
     W = {"name": 34, "key": 9, "sales": 13, "profit": 12, "margin": 8, "last_m": 9,
          "last_month_name": 13, "months_since": 15, "months": 11, "status": 13,
-         "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8, "visit_day": 10,
+         "agent": 12, "seg": 7, "code": 6, "customers": 9, "active": 8, "risk": 8, "visit_day": 10,
          "city": 14, "last_visit": 12, "days_since_visit": 14, "n_visits": 10,
          "visit_gap": 11, "visited_no_order": 13}
     has_visits = "city" in c.columns
@@ -179,46 +180,47 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
     ag["active"] = ag["active"].astype(int)
     ag["risk"] = ag["risk"].astype(int)
     ag["margin"] = np.where(ag["sales"] > 0, (ag["profit"] / ag["sales"] * 100).round(1), 0)
+    ag["code"] = ag["seg"].str.replace(r"\D", "", regex=True)
     if has_visits:
         ag["cities"] = c.groupby(["seg", "agent"])["city"].nunique().reindex(
             list(zip(ag["seg"], ag["agent"]))).values
         emit(wb.create_sheet("השוואת סוכנים"), ag,
-             ["seg", "agent", "customers", "cities", "active", "risk", "sales", "profit", "margin"],
+             ["code", "agent", "customers", "cities", "active", "risk", "sales", "profit", "margin"],
              ["חתך", "סוכן", "לקוחות", "ערים", "פעילים", "בסיכון", "מכירות", "רווח", "% רווח"],
              money=("sales", "profit"))
         # 🚩 גליון דחוף: ביקר ולא הזמין (הסוכן ביקר, הלקוח לא הזמין מאז)
         vno = c[c["visited_no_order"] == "כן"].sort_values("sales", ascending=False)
         emit(wb.create_sheet("🚩 ביקר ולא הזמין"), vno,
-             ["agent", "name", "key", "city", "sales", "last_month_name", "months_since",
+             ["code", "agent", "name", "key", "city", "sales", "last_month_name", "months_since",
               "last_visit", "days_since_visit", "status"],
-             ["סוכן", "שם לקוח", "מס לקוח", "עיר", "מכירות", "חודש קנייה אחרון",
+             ["חתך", "סוכן", "שם לקוח", "מס לקוח", "עיר", "מכירות", "חודש קנייה אחרון",
               "חודשים ללא קנייה", "ביקור אחרון", "ימים מאז ביקור", "סטטוס"],
              money=("sales",), color_status=True, hdr_fill=HDR2)
         # לקוחות להעברה (נטשו / בסכנת נטישה)
         trans = c[c["risk"]].sort_values(["agent", "sales"], ascending=[True, False])
         emit(wb.create_sheet("לקוחות להעברה"), trans,
-             ["agent", "name", "key", "city", "sales", "last_month_name", "months_since",
+             ["code", "agent", "name", "key", "city", "sales", "last_month_name", "months_since",
               "visited_no_order", "last_visit", "status"],
-             ["סוכן", "שם לקוח", "מס לקוח", "עיר", "מכירות", "חודש קנייה אחרון",
+             ["חתך", "סוכן", "שם לקוח", "מס לקוח", "עיר", "מכירות", "חודש קנייה אחרון",
               "חודשים ללא קנייה", "ביקר ולא הזמין", "ביקור אחרון", "סטטוס"],
              money=("sales",), color_status=True)
         c = c.copy()
         c["_dayord"] = c["visit_day"].map({d: i for i, d in enumerate(DAY_ORDER)}).fillna(9)
-        cols = ["name", "key", "city", "visit_day", "sales", "profit", "margin", "last_month_name",
+        cols = ["code", "name", "key", "city", "visit_day", "sales", "profit", "margin", "last_month_name",
                 "months_since", "visited_no_order", "last_visit", "days_since_visit",
                 "n_visits", "visit_gap", "status"]
-        heads = ["שם לקוח", "מס לקוח", "עיר", "יום ביקור", "מכירות", "רווח", "% רווח",
+        heads = ["חתך", "שם לקוח", "מס לקוח", "עיר", "יום ביקור", "מכירות", "רווח", "% רווח",
                  "חודש קנייה אחרון", "חודשים ללא קנייה", "ביקר ולא הזמין", "ביקור אחרון",
                  "ימים מאז ביקור", "מס' ביקורים", "תדירות", "סטטוס"]
         sort_by = ["_dayord", "city", "sales"]
         sort_asc = [True, True, False]
     else:
         emit(wb.create_sheet("השוואת סוכנים"), ag,
-             ["seg", "agent", "customers", "active", "risk", "sales", "profit", "margin"],
+             ["code", "agent", "customers", "active", "risk", "sales", "profit", "margin"],
              ["חתך", "סוכן", "לקוחות", "פעילים", "בסיכון", "מכירות", "רווח", "% רווח"],
              money=("sales", "profit"))
-        cols = ["name", "key", "sales", "profit", "margin", "last_month_name", "months_since", "months", "status"]
-        heads = ["שם לקוח", "מס לקוח", "מכירות", "רווח", "% רווח", "חודש אחרון", "חודשים מאז קנייה", "חודשים פעיל", "סטטוס"]
+        cols = ["code", "name", "key", "sales", "profit", "margin", "last_month_name", "months_since", "months", "status"]
+        heads = ["חתך", "שם לקוח", "מס לקוח", "מכירות", "רווח", "% רווח", "חודש אחרון", "חודשים מאז קנייה", "חודשים פעיל", "סטטוס"]
         sort_by, sort_asc = ["sales"], [False]
 
     used = set()
