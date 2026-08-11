@@ -26,6 +26,9 @@ ACTIVE = {"בעלייה", "יציב", "בירידה"}
 RISK = {"בסכנת נטישה", "נטש"}
 MONTH_HE = {1: "ינואר", 2: "פברואר", 3: "מרץ", 4: "אפריל", 5: "מאי", 6: "יוני",
             7: "יולי", 8: "אוגוסט", 9: "ספטמבר", 10: "אוקטובר", 11: "נובמבר", 12: "דצמבר"}
+# יום בשבוע (pandas: שני=0..ראשון=6) → עברית
+DOW_HE = {6: "יום א'", 0: "יום ב'", 1: "יום ג'", 2: "יום ד'", 3: "יום ה'", 4: "יום ו'", 5: "שבת"}
+DAY_ORDER = ["יום א'", "יום ב'", "יום ג'", "יום ד'", "יום ה'", "יום ו'", "שבת", "לא משויך"]
 
 
 def _compute_status(last_m: int, recent: float, earlier: float, current_month: int) -> str:
@@ -87,6 +90,7 @@ def parse_visits(xlsx_path: str, today: pd.Timestamp | None = None) -> pd.DataFr
     v["key"] = v["לקוח"].astype(str).str.extract(r"^\s*(\d+)")
     v["date"] = pd.to_datetime(v["תאריך"], errors="coerce", dayfirst=True)
     v = v.dropna(subset=["key", "date"])
+    v["dow"] = v["date"].dt.dayofweek
 
     def _gap(dates: pd.Series) -> float:
         d = dates.sort_values()
@@ -97,22 +101,29 @@ def parse_visits(xlsx_path: str, today: pd.Timestamp | None = None) -> pd.DataFr
         return re.sub(r"\s+", " ", re.sub(r"[0-9\-]", "", str(val))).strip() or "—"
 
     g = v.groupby("key").agg(city=("עיר", _city), last_visit=("date", "max"),
-                             n_visits=("date", "size")).reset_index()
+                             n_visits=("date", "size"),
+                             dow=("dow", lambda x: int(x.mode().iloc[0]))).reset_index()
     g = g.merge(v.groupby("key")["date"].apply(_gap).rename("visit_gap").reset_index(), on="key", how="left")
     g["days_since_visit"] = (today - g["last_visit"]).dt.days
+    g["visit_month"] = g["last_visit"].dt.month
+    g["visit_day"] = g["dow"].map(DOW_HE)
     g["last_visit"] = g["last_visit"].dt.strftime("%d/%m/%Y")
-    return g
+    return g.drop(columns=["dow"])
 
 
 def enrich_with_visits(c: pd.DataFrame, visits: pd.DataFrame) -> pd.DataFrame:
-    """מוסיף לטבלת הלקוחות את נתוני הביקורים לפי מפתח לקוח."""
+    """מוסיף לטבלת הלקוחות את נתוני הביקורים לפי מפתח לקוח + דגלי טיפול."""
     m = c.merge(visits, on="key", how="left")
+    # דגל "ביקר ולא הזמין": ביקור אחרון מאוחר מחודש הקנייה האחרון
+    m["visited_no_order"] = np.where(
+        m["visit_month"].notna() & (m["visit_month"] > m["last_m"]), "כן", "")
     m["city"] = m["city"].fillna("—")
     m["last_visit"] = m["last_visit"].fillna("—")
+    m["visit_day"] = m["visit_day"].fillna("לא משויך")
     m["n_visits"] = m["n_visits"].fillna(0).astype(int)
     m["days_since_visit"] = m["days_since_visit"].apply(lambda x: int(x) if pd.notna(x) else "")
     m["visit_gap"] = m["visit_gap"].apply(lambda x: x if pd.notna(x) else "")
-    return m
+    return m.drop(columns=["visit_month"])
 
 
 def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
@@ -125,31 +136,38 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
     HDR = PatternFill("solid", fgColor="2A78D6")
     HF = Font(color="FFFFFF", bold=True, size=11)
     BORD = Border(bottom=Side(style="thin", color="DDDDDD"))
+    HDR2 = PatternFill("solid", fgColor="C55A11")  # כותרת הגליון הדחוף
+    FLAG = PatternFill("solid", fgColor="FFF2CC")   # דגל "ביקר ולא הזמין"
     STCOL = {"בעלייה": "C6EFCE", "יציב": "C6EFCE", "בירידה": "FFEB9C",
              "בסכנת נטישה": "FCD5B4", "נטש": "FFC7CE"}
     W = {"name": 34, "key": 9, "sales": 13, "profit": 12, "margin": 8, "last_m": 9,
-         "last_month_name": 12, "months_since": 15, "months": 11, "status": 13,
-         "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8,
-         "city": 14, "last_visit": 12, "days_since_visit": 14, "n_visits": 10, "visit_gap": 12}
+         "last_month_name": 13, "months_since": 15, "months": 11, "status": 13,
+         "agent": 12, "seg": 7, "customers": 9, "active": 8, "risk": 8, "visit_day": 10,
+         "city": 14, "last_visit": 12, "days_since_visit": 14, "n_visits": 10,
+         "visit_gap": 11, "visited_no_order": 13}
     has_visits = "city" in c.columns
 
-    def emit(ws, df, cols, headers, money=(), color_status=False):
+    def emit(ws, df, cols, headers, money=(), color_status=False, hdr_fill=HDR):
         ws.sheet_view.rightToLeft = True
         for j, h in enumerate(headers, 1):
             cc = ws.cell(1, j, h)
-            cc.fill, cc.font = HDR, HF
-            cc.alignment = Alignment(horizontal="center")
+            cc.fill, cc.font = hdr_fill, HF
+            cc.alignment = Alignment(horizontal="center", wrap_text=True)
         for i, (_, r) in enumerate(df.iterrows(), 2):
             for j, col in enumerate(cols, 1):
                 v = r[col]
                 if col in ("sales", "profit", "customers", "active", "risk"):
                     v = int(v)
+                if col == "visit_day":
+                    v = str(v)
                 cc = ws.cell(i, j, v)
                 cc.border = BORD
                 if col in money:
                     cc.number_format = "#,##0"
                 if color_status and col == "status" and r["status"] in STCOL:
                     cc.fill = PatternFill("solid", fgColor=STCOL[r["status"]])
+                if col == "visited_no_order" and v == "כן":
+                    cc.fill = FLAG
         for j, col in enumerate(cols, 1):
             ws.column_dimensions[get_column_letter(j)].width = W.get(col, 12)
         ws.freeze_panes = "A2"
@@ -168,12 +186,32 @@ def write_excel(c: pd.DataFrame, path: Path, min_customers: int = 10) -> None:
              ["seg", "agent", "customers", "cities", "active", "risk", "sales", "profit", "margin"],
              ["חתך", "סוכן", "לקוחות", "ערים", "פעילים", "בסיכון", "מכירות", "רווח", "% רווח"],
              money=("sales", "profit"))
-        cols = ["name", "key", "city", "sales", "profit", "margin", "last_month_name",
-                "last_visit", "days_since_visit", "n_visits", "visit_gap", "status"]
-        heads = ["שם לקוח", "מס לקוח", "עיר", "מכירות", "רווח", "% רווח", "חודש מכירה",
-                 "ביקור אחרון", "ימים מאז ביקור", "מס' ביקורים", "תדירות (ימים)", "סטטוס"]
-        sort_by = ["city", "sales"]
-        sort_asc = [True, False]
+        # 🚩 גליון דחוף: ביקר ולא הזמין (הסוכן ביקר, הלקוח לא הזמין מאז)
+        vno = c[c["visited_no_order"] == "כן"].sort_values("sales", ascending=False)
+        emit(wb.create_sheet("🚩 ביקר ולא הזמין"), vno,
+             ["agent", "name", "key", "city", "sales", "last_month_name", "months_since",
+              "last_visit", "days_since_visit", "status"],
+             ["סוכן", "שם לקוח", "מס לקוח", "עיר", "מכירות", "חודש קנייה אחרון",
+              "חודשים ללא קנייה", "ביקור אחרון", "ימים מאז ביקור", "סטטוס"],
+             money=("sales",), color_status=True, hdr_fill=HDR2)
+        # לקוחות להעברה (נטשו / בסכנת נטישה)
+        trans = c[c["risk"]].sort_values(["agent", "sales"], ascending=[True, False])
+        emit(wb.create_sheet("לקוחות להעברה"), trans,
+             ["agent", "name", "key", "city", "sales", "last_month_name", "months_since",
+              "visited_no_order", "last_visit", "status"],
+             ["סוכן", "שם לקוח", "מס לקוח", "עיר", "מכירות", "חודש קנייה אחרון",
+              "חודשים ללא קנייה", "ביקר ולא הזמין", "ביקור אחרון", "סטטוס"],
+             money=("sales",), color_status=True)
+        c = c.copy()
+        c["_dayord"] = c["visit_day"].map({d: i for i, d in enumerate(DAY_ORDER)}).fillna(9)
+        cols = ["name", "key", "city", "visit_day", "sales", "profit", "margin", "last_month_name",
+                "months_since", "visited_no_order", "last_visit", "days_since_visit",
+                "n_visits", "visit_gap", "status"]
+        heads = ["שם לקוח", "מס לקוח", "עיר", "יום ביקור", "מכירות", "רווח", "% רווח",
+                 "חודש קנייה אחרון", "חודשים ללא קנייה", "ביקר ולא הזמין", "ביקור אחרון",
+                 "ימים מאז ביקור", "מס' ביקורים", "תדירות", "סטטוס"]
+        sort_by = ["_dayord", "city", "sales"]
+        sort_asc = [True, True, False]
     else:
         emit(wb.create_sheet("השוואת סוכנים"), ag,
              ["seg", "agent", "customers", "active", "risk", "sales", "profit", "margin"],
