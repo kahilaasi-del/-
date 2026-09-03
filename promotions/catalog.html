@@ -736,11 +736,43 @@ function loadXLS(event){
     reader.readAsArrayBuffer(file); event.target.value="";
 }
 
+/* ── המרת תמונה ל-data URI מכווץ (להטמעה בייצוא) ── */
+function imgToDataURI(url,maxDim,q){
+    return new Promise(function(res){
+        var im=new Image();
+        im.onload=function(){
+            try{
+                var w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;
+                if(!w||!h){res(null);return;}
+                var s=Math.min(1,maxDim/Math.max(w,h));
+                var cw=Math.max(1,Math.round(w*s)),ch=Math.max(1,Math.round(h*s));
+                var cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+                var ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cw,ch);
+                ctx.drawImage(im,0,0,cw,ch);
+                res(cv.toDataURL("image/jpeg",q));
+            }catch(e){res(null);}
+        };
+        im.onerror=function(){res(null);};
+        im.src=url;
+    });
+}
+
 /* ── EXPORT ── */
-function exportStatic(){
+async function exportStatic(){
     if(!allItems.length){alert("טען קובץ אקסל קודם");return;}
     var btn=document.querySelector('[onclick="exportStatic()"]');
     if(btn){btn.textContent="⏳ מכין...";btn.disabled=true;}
+
+    // הטמעת התמונות שנטענו (מכווצות) כדי שהקובץ המיוצא יהיה עצמאי
+    var imgData={};
+    var uniq=[],seen={};
+    allItems.forEach(function(i){if(imgCache[i.id]&&!seen[i.id]){seen[i.id]=1;uniq.push(i.id);}});
+    for(var _i=0;_i<uniq.length;_i++){
+        if(btn)btn.textContent="⏳ מטמיע תמונות "+(_i+1)+"/"+uniq.length;
+        var _d=await imgToDataURI(imgCache[uniq[_i]],320,0.72);
+        if(_d)imgData[uniq[_i]]=_d;
+    }
+    if(btn)btn.textContent="⏳ בונה קובץ...";
 
     var today=new Date().toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
     var _esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
@@ -775,7 +807,8 @@ function exportStatic(){
             var price=parseFloat(String(item.price||"0").replace(/,/g,""))||0;
             sectionsHtml+='<div class="card" style="--plus:'+col+';--plusfg:'+plusFg(col)+';" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-bar="'+(item.bar||"")+'" data-cat="'+(item.cat||"")+'">';
             sectionsHtml+='<div class="card-img"><div class="cat-rail" style="background:'+col+';"></div>';
-            sectionsHtml+='<img src="'+IMGF+item.id+IMGE+'" alt="'+item.name+'" onerror="this.style.display=\'none\'">';
+            var _isrc=imgData[item.id]||(IMGF+item.id+IMGE);
+            sectionsHtml+='<img src="'+_isrc+'" alt="'+item.name+'" onerror="this.style.display=\'none\'">';
             var pri=(item.priority||"").trim();
             if(pri==="sun")sectionsHtml+='<div class="badge-pri">☀️</div>';
             else if(pri==="star")sectionsHtml+='<div class="badge-pri">⭐</div>';
