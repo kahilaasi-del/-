@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>מדריך — קטלוג מבצעים</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#f6f7f9; --card:#fff; --ink:#1b2430; --muted:#5c6673; --line:#e7eaef;
+         --accent:#2563eb; --sky:#38bdf8; --green:#16a34a; --amber:#e0a021; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Heebo",system-ui,Arial,sans-serif;line-height:1.6;}
+  .wrap{max-width:780px;margin:0 auto;padding:28px 20px 70px;}
+  header.top{background:linear-gradient(120deg,#eef4ff,#f6f7f9);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-bottom:24px;}
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--accent);text-transform:uppercase;margin:0 0 6px;}
+  h1{font-size:28px;font-weight:900;margin:0 0 6px;letter-spacing:-.01em;}
+  .sub{color:var(--muted);margin:0;font-size:15px;}
+  h2{font-size:19px;font-weight:800;margin:30px 0 12px;padding-bottom:7px;border-bottom:2px solid var(--line);}
+  .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;counter-reset:s;}
+  .steps li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 15px 13px 52px;position:relative;}
+  .steps li::before{counter-increment:s;content:counter(s);position:absolute;inset-inline-start:12px;top:12px;
+    width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;font-size:14px;
+    display:flex;align-items:center;justify-content:center;}
+  .steps b{font-weight:800;}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0;}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;border-radius:10px;padding:7px 12px;border:1px solid var(--line);background:#fff;}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:14px;}
+  th,td{text-align:right;padding:10px 13px;border-bottom:1px solid var(--line);}
+  th{background:#f1f5f9;font-weight:800;}
+  tr:last-child td{border-bottom:0;}
+  td b{font-weight:800;}
+  .tip{background:#fffbeb;border:1px solid #fce8a8;border-radius:12px;padding:12px 15px;font-size:14px;margin-top:10px;}
+  .tip b{color:#92400e;}
+  code{background:#eef2f7;border-radius:6px;padding:1px 7px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;direction:ltr;display:inline-block;}
+  .foot{margin-top:34px;color:var(--muted);font-size:13px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">מעיין נציגויות · קטלוג מבצעים</p>
+    <h1>מדריך שימוש — עדכון חודשי</h1>
+    <p class="sub">כל מה שצריך כדי לעדכן, לסדר ולשלוח את קטלוג המבצעים — בכמה צעדים.</p>
+  </header>
+
+  <h2>⚡ הזרימה החודשית — 3 צעדים</h2>
+  <ol class="steps">
+    <li><b>מכינים אקסל מסודר.</b> מריצים את סקריפט הסידור על קובץ המבצעים של החודש —
+        מסודר לפי קטגוריות ראשיות, עם SUN/STAR ראשונים בכל קטגוריה.</li>
+    <li><b>טוענים לקטלוג.</b> פותחים את <code>מבצעים ...2026.html</code> בדפדפן →
+        <b>📂 טען אקסל</b> → בוחרים את הקובץ המסודר. כל המוצרים מופיעים.</li>
+    <li><b>מייצאים / מדפיסים.</b> <b>📤 ייצא קובץ מוכן</b> ליצירת קטלוג נייד לשליחה,
+        או <b>🖨️ הדפס</b> ל‑PDF/נייר.</li>
+  </ol>
+
+  <h2>🔘 הכפתורים בסרגל</h2>
+  <table>
+    <tr><th>כפתור</th><th>מה עושה</th></tr>
+    <tr><td><b>📂 טען אקסל</b></td><td>טוען את קובץ המבצעים המסודר (החלף כל חודש).</td></tr>
+    <tr><td><b>🖼️ תמונות</b></td><td>בוחרים את <b>תיקיית</b> התמונות. כל תמונה מותאמת לפי מק"ט (שם הקובץ = מפתח הפריט).</td></tr>
+    <tr><td><b>🏷️ טען לוגו</b></td><td>בוחרים את <code>logo.png</code> פעם אחת — נשמר ומוטמע.</td></tr>
+    <tr><td><b>⇅ סדר קטגוריות</b></td><td>גרירה לסידור סדר הקטגוריות (נשמר בדפדפן).</td></tr>
+    <tr><td><b>⇄ סדר פריטים</b></td><td>גרירה לסידור פריטים בתוך קטגוריה.</td></tr>
+    <tr><td><b>📤 ייצא קובץ מוכן</b></td><td>קובץ HTML עצמאי (לוגו + תמונות מוטמעים) לשליחה ללקוחות.</td></tr>
+    <tr><td><b>🖨️ הדפס</b></td><td>הדפסה או שמירה כ‑PDF.</td></tr>
+  </table>
+
+  <h2>✨ עוד דברים שאפשר לעשות</h2>
+  <div class="btnrow">
+    <span class="chip">✏️ לחיצה על הכותרת = עריכת הטקסט</span>
+    <span class="chip">🎨 נקודת הצבע בכרטיס = צבע הקטגוריה</span>
+    <span class="chip">🛒 סל: שינוי כמות + מחיקה</span>
+    <span class="chip">🔍 חיפוש לפי שם / מק"ט / ברקוד</span>
+  </div>
+
+  <div class="tip">
+    <b>הכל נשמר בדפדפן:</b> סדר הקטגוריות, הצבעים, הלוגו והכותרות נשמרים אוטומטית
+    כך שבפעם הבאה שתפתח — הכל כבר מוכן. פשוט טען אקסל חדש.
+  </div>
+
+  <div class="tip">
+    <b>שימו לב לתמונות:</b> אם אתם רוצים תמונות בקטלוג, טענו אותן דרך <b>🖼️ תמונות</b>
+    לפני הייצוא — הן ייטמעו בקובץ המיוצא כך שיעבוד בכל מקום.
+  </div>
+
+  <p class="foot">מעיין נציגויות — השם שמאחורי השירות · מדריך פנימי</p>
+</div>
+</body>
+</html>
