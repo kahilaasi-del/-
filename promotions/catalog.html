@@ -336,7 +336,7 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 <script>
 var IMGF="./images/", IMGE=".jpg";
 var BRAND_LOGO="logo.png"; // לוגו המותג — קובץ ליד ה-HTML (או data URI מוטמע)
-var WA="972505555758"; // << שנה למספר שלך!
+var WA=""; // ריק = בוחרים נמען בוואטסאפ בכל שליחה. למספר קבוע: שים "9725XXXXXXXX"
 var imgCache={}, allItems=[], catOrder=[], catColors={}, cart={}, custOrder=[], sortDragEl=null, activeCpId=null;
 
 var DEFAULT_ORDER=["גלידות","פררו - קינדר","מסטיקים | סוכריות | לקקנים","שוקולדים קו קופות","שוקולדים טבלאות | בונבונירות","עוגיות  | עוגות | וופלים | עוגות אישיות","חטיפים מלוחים | פיצוחים | מוצרי אירוח","חטיפי אנרגיה | דגני בוקר | מוצרי בריאות","מוצרי חלבון","מוצרים ארה\"ב","מסטיקים | סוכריות | לקקנים","שתייה קלה | טרופיות | חטיפי קרח","משקאות אנרגיה | בירות | יין | אלכוהול","רטבים | ממרחים | יבשים | אפיה | שמנים","מוצרים למשקל | לקריצים | גומי תפזורת | טופי","צעצועים | ממתקים","שתיה חמה | קפה | תה"];
@@ -570,7 +570,8 @@ function sendOrder(){
     var msg="🔥 *הזמנת מבצעים*\n────────\n👤 "+n+"\n📱 "+ph+"\n📅 "+new Date().toLocaleDateString("he-IL")+"\n────────\n\n";
     en.forEach(function(e,i){msg+=(i+1)+". *"+e.name+"*\n   מק\"ט: "+e.id+"\n   כמות: "+e.qty+"\n\n";});
     msg+="────────\nסה\"כ "+en.length+" פריטים";
-    window.open("https://wa.me/"+WA+"?text="+encodeURIComponent(msg),"_blank");
+    var base=(WA&&WA.trim())?("https://wa.me/"+WA.trim()+"?text="):"https://wa.me/?text=";
+    window.open(base+encodeURIComponent(msg),"_blank");
 }
 
 /* ── COLOR PICKER ── */
@@ -886,7 +887,7 @@ async function exportStatic(){
         "window.cartRender=function(){var list=document.getElementById('cList');if(!list)return;var en=Object.values(cart);list.innerHTML='';if(!en.length){list.innerHTML='<div style=\"text-align:center;padding:20px;color:#94a3b8;\">הסל ריק</div>';return;}en.forEach(function(e){var r=document.createElement('div');r.className='cart-row';var nm=document.createElement('div');nm.className='cart-nm';nm.textContent=e.name;var ctr=document.createElement('div');ctr.className='cart-ctr';var mn=document.createElement('button');mn.className='cbtn';mn.textContent='−';mn.onclick=function(){cartAdd(e.id,-1);};var qi=document.createElement('input');qi.type='number';qi.className='cqi';qi.min='1';qi.value=e.qty;qi.oninput=function(){cartSetQ(e.id,this.value);};var pl=document.createElement('button');pl.className='cbtn cbtn-p';pl.textContent='+';pl.onclick=function(){cartAdd(e.id,1);};ctr.appendChild(mn);ctr.appendChild(qi);ctr.appendChild(pl);var del=document.createElement('button');del.className='cdel';del.textContent='🗑';del.title='הסר';del.onclick=function(){cartRemove(e.id);};r.appendChild(nm);r.appendChild(ctr);r.appendChild(del);list.appendChild(r);});var tot=document.createElement('div');tot.className='cart-total';tot.id='cTotal';list.appendChild(tot);cartTotal();};",
         "window.openCart=function(){cartRender();document.getElementById('cModal').style.display='flex';};",
         "window.closeCart=function(){document.getElementById('cModal').style.display='none';};",
-        "window.sendOrder=function(){var n=document.getElementById('cName').value.trim(),ph=document.getElementById('cPhone').value.trim();if(!n){document.getElementById('cName').style.borderColor='#ef4444';document.getElementById('cName').focus();return;}if(!ph){document.getElementById('cPhone').style.borderColor='#ef4444';document.getElementById('cPhone').focus();return;}var en=Object.values(cart);if(!en.length){alert('הסל ריק');return;}var msg='🔥 *הזמנת מבצעים*\\n────────\\n👤 '+n+'\\n📱 '+ph+'\\n📅 '+new Date().toLocaleDateString('he-IL')+'\\n────────\\n\\n';en.forEach(function(e,i){msg+=(i+1)+'. *'+e.name+'*\\n   מק\"ט: '+e.id+'\\n   כמות: '+e.qty+'\\n\\n';});msg+='────────\\nסה\"כ '+en.length+' פריטים';window.open('https://wa.me/'+WA+'?text='+encodeURIComponent(msg),'_blank');};",
+        "window.sendOrder=function(){var n=document.getElementById('cName').value.trim(),ph=document.getElementById('cPhone').value.trim();if(!n){document.getElementById('cName').style.borderColor='#ef4444';document.getElementById('cName').focus();return;}if(!ph){document.getElementById('cPhone').style.borderColor='#ef4444';document.getElementById('cPhone').focus();return;}var en=Object.values(cart);if(!en.length){alert('הסל ריק');return;}var msg='🔥 *הזמנת מבצעים*\\n────────\\n👤 '+n+'\\n📱 '+ph+'\\n📅 '+new Date().toLocaleDateString('he-IL')+'\\n────────\\n\\n';en.forEach(function(e,i){msg+=(i+1)+'. *'+e.name+'*\\n   מק\"ט: '+e.id+'\\n   כמות: '+e.qty+'\\n\\n';});msg+='────────\\nסה\"כ '+en.length+' פריטים';var _b=(WA&&WA.trim())?('https://wa.me/'+WA.trim()+'?text='):'https://wa.me/?text=';window.open(_b+encodeURIComponent(msg),'_blank');};",
         "var si=document.getElementById('srch');if(si)si.addEventListener('input',function(){var q=this.value.trim().toLowerCase();document.querySelectorAll('.card').forEach(function(c){var n=(c.querySelector('.card-name')||{}).textContent||'';var b=c.getAttribute('data-bar')||'';var id=c.getAttribute('data-id')||'';c.style.display=(!q||n.toLowerCase().includes(q)||b.includes(q)||id.includes(q))?'':'none';});document.querySelectorAll('.cat-section').forEach(function(s){var v=Array.from(s.querySelectorAll('.card')).some(function(c){return c.style.display!=='none';});s.style.display=v?'':'none';});});",
         "})();"
     ].join("\n");
