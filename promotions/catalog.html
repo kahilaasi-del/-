@@ -103,7 +103,7 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 .qbtn { width:26px; height:26px; border:0; font-size:15px; font-weight:700; cursor:pointer; font-family:Heebo,sans-serif; line-height:1; }
 .qbtn-minus { background:#f8fafc; color:#334155; }
 .qbtn-minus:hover { background:#e2e8f0; }
-.qbtn-plus { background:var(--plus,#38bdf8); color:white; }
+.qbtn-plus { background:var(--plus,#38bdf8); color:var(--plusfg,#fff); }
 .qbtn-plus:hover { filter:brightness(.95); }
 .qinp { width:32px; height:26px; border:0; border-inline:1px solid #e2e8f0; text-align:center; font-size:13px; font-weight:700; font-family:Heebo,sans-serif; outline:none; -moz-appearance:textfield; }
 .qinp::-webkit-outer-spin-button, .qinp::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
@@ -131,6 +131,10 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 /* Header */
 .site-header { background:white; border-radius:20px; box-shadow:0 2px 16px rgba(0,0,0,.08); padding:14px 22px; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:4px solid #dc2626; }
 .logo-img { height:54px; width:auto; object-fit:contain; }
+/* כותרות הניתנות לעריכה */
+.h-edit { cursor:text; border-radius:6px; padding:1px 5px; outline:none; transition:background .15s,box-shadow .15s; }
+.h-edit:hover { background:#f1f5f9; box-shadow:inset 0 0 0 1px #e2e8f0; }
+.h-edit:focus { background:#fff; box-shadow:inset 0 0 0 2px #38bdf8; }
 
 /* סל */
 #cartBtn { position:fixed; bottom:24px; left:24px; z-index:500; background:#16a34a; color:white; border:none; border-radius:99px; padding:13px 20px; font-size:14px; font-weight:800; cursor:pointer; box-shadow:0 4px 18px rgba(22,163,74,0.4); display:none; align-items:center; gap:8px; font-family:Heebo,sans-serif; }
@@ -274,13 +278,13 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 
 <!-- HEADER -->
 <header class="site-header">
-  <div style="text-align:right;min-width:110px;">
-    <div style="font-size:13px;font-weight:700;color:#1e293b;">🔥 מבצעי אוגוסט 2026</div>
+  <div style="text-align:right;min-width:120px;">
+    <div id="hSub" class="h-edit" contenteditable="true" spellcheck="false" style="font-size:13px;font-weight:700;color:#1e293b;">🔥 מבצעי אוגוסט 2026</div>
     <div id="itemCount" style="font-size:11px;color:#94a3b8;margin-top:1px;"></div>
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
     <img src="./logo.png" class="logo-img" alt="לוגו" onerror="this.style.display='none'">
-    <h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">מבצעי החודש</h1>
+    <h1 id="hTitle" class="h-edit" contenteditable="true" spellcheck="false" style="font-size:1.6rem;font-weight:900;color:#1e293b;">מבצעי החודש</h1>
   </div>
   <div style="min-width:110px;text-align:left;font-size:12px;color:#94a3b8;" id="hDate"></div>
 </header>
@@ -351,6 +355,10 @@ function priceHTML(item,price){
     return '<div class="hc-price-top">'+top+'</div>'+net;
 }
 
+/* צבע טקסט קריא מעל צבע רקע (שחור/לבן לפי בהירות) */
+function lum(hex){hex=String(hex||"").replace("#","");if(hex.length===3)hex=hex.replace(/./g,"$&$&");if(hex.length<6)return 0;var r=parseInt(hex.substr(0,2),16),g=parseInt(hex.substr(2,2),16),b=parseInt(hex.substr(4,2),16);return (0.299*r+0.587*g+0.114*b)/255;}
+function plusFg(col){return lum(col)>0.7?"#0f172a":"#fff";}
+
 /* ── BUILD CARD (פריסה לרוחב) ── */
 function buildCard(item){
     var col=catColors[item.cat]||DEFAULT_COLORS[item.cat]||"#dc2626";
@@ -358,6 +366,8 @@ function buildCard(item){
     var nm=item.name||"";
 
     var card=mk("div"); card.className="card";
+    card.style.setProperty("--plus",col);
+    card.style.setProperty("--plusfg",plusFg(col));
     card.setAttribute("data-id",item.id);
     card.setAttribute("data-name",nm);
     card.setAttribute("data-bar",item.bar||"");
@@ -712,6 +722,9 @@ function exportStatic(){
     if(btn){btn.textContent="⏳ מכין...";btn.disabled=true;}
 
     var today=new Date().toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
+    var _esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
+    var hTitleTxt=_esc((document.getElementById("hTitle")||{}).textContent||"מבצעי החודש");
+    var hSubTxt=_esc((document.getElementById("hSub")||{}).textContent||"🔥 מבצעי אוגוסט 2026");
     var cssText="";
     Array.from(document.styleSheets).forEach(function(ss){try{Array.from(ss.cssRules).forEach(function(r){cssText+=r.cssText+"\n";});}catch(e){}});
 
@@ -739,7 +752,7 @@ function exportStatic(){
         sectionsHtml+='<div class="grid grid-cols-1 xl:grid-cols-2 gap-3">';
         sorted.forEach(function(item){
             var price=parseFloat(String(item.price||"0").replace(/,/g,""))||0;
-            sectionsHtml+='<div class="card" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-bar="'+(item.bar||"")+'" data-cat="'+(item.cat||"")+'">';
+            sectionsHtml+='<div class="card" style="--plus:'+col+';--plusfg:'+plusFg(col)+';" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-bar="'+(item.bar||"")+'" data-cat="'+(item.cat||"")+'">';
             sectionsHtml+='<div class="card-img"><div class="cat-rail" style="background:'+col+';"></div>';
             sectionsHtml+='<img src="'+IMGF+item.id+IMGE+'" alt="'+item.name+'" onerror="this.style.display=\'none\'">';
             var pri=(item.priority||"").trim();
@@ -802,7 +815,7 @@ function exportStatic(){
     var html=[
         '<!DOCTYPE html><html lang="he" dir="rtl"><head>',
         '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">',
-        '<title>מבצעי אוגוסט 2026</title>',
+        '<title>'+hTitleTxt+'</title>',
         '<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet">',
         '<script src="https://cdn.tailwindcss.com"><\/script>',
         '<style>'+cssText+'<\/style>',
@@ -810,8 +823,8 @@ function exportStatic(){
         cartHtml,
         '<div class="max-w-7xl mx-auto">',
         '<header style="background:white;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:14px 22px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid #dc2626;">',
-        '<div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;">🔥 מבצעי אוגוסט 2026</div><div style="font-size:11px;color:#94a3b8;">'+allItems.length.toLocaleString()+' מבצעים</div></div>',
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="./logo.png" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">מבצעי החודש</h1></div>',
+        '<div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;">'+hSubTxt+'</div><div style="font-size:11px;color:#94a3b8;">'+allItems.length.toLocaleString()+' מבצעים</div></div>',
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="./logo.png" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1></div>',
         '<div style="min-width:110px;text-align:left;font-size:12px;color:#94a3b8;">'+today+'</div>',
         '</header>',
         '<div style="margin-bottom:14px;position:relative;">',
@@ -906,8 +919,19 @@ window.onload=function(){
     try{var s=localStorage.getItem("promoCategoryOrder");if(s)catOrder=JSON.parse(s);}catch(e){}
     Object.keys(DEFAULT_COLORS).forEach(function(k){if(!catColors[k])catColors[k]=DEFAULT_COLORS[k];});
     try{var sc=localStorage.getItem("promoCategoryColors");if(sc){var pc=JSON.parse(sc);Object.keys(pc).forEach(function(k){catColors[k]=pc[k];});}}catch(e){}
+    initHeaderEdit();
     document.getElementById("noEl").style.display="block";
 };
+/* כותרות ניתנות לעריכה — שחזור ושמירה בדפדפן */
+function initHeaderEdit(){
+    ["hTitle","hSub"].forEach(function(id){
+        var el=document.getElementById(id); if(!el)return;
+        try{var s=localStorage.getItem("promo_"+id);if(s!=null&&String(s).trim())el.textContent=s;}catch(e){}
+        el.title="לחץ לעריכת הכותרת";
+        el.addEventListener("input",function(){try{localStorage.setItem("promo_"+id,el.textContent);}catch(e){}});
+        el.addEventListener("keydown",function(ev){if(ev.key==="Enter"){ev.preventDefault();el.blur();}});
+    });
+}
 </script>
 </body>
 </html>
