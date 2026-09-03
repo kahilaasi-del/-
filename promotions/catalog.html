@@ -296,6 +296,8 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
     <input type="file" id="xlIn" accept=".xlsx,.xls" class="hidden" onchange="loadXLS(event)">
     <label for="imgIn" class="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-full shadow flex items-center gap-2">🖼️ תמונות</label>
     <input type="file" id="imgIn" webkitdirectory class="hidden" onchange="loadImgs(event)">
+    <label for="logoIn" class="cursor-pointer bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-5 rounded-full shadow flex items-center gap-2">🏷️ טען לוגו</label>
+    <input type="file" id="logoIn" accept="image/*" class="hidden" onchange="loadLogo(event)">
     <button onclick="document.getElementById('sortModal').classList.add('open');renderSortList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-full shadow">⇅ סדר קטגוריות</button>
     <button onclick="openItemSort()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-5 rounded-full shadow">⇄ סדר פריטים</button>
     <button onclick="exportStatic()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-5 rounded-full shadow">📤 ייצא קובץ מוכן</button>
@@ -631,6 +633,25 @@ function doSearch(){
     render(filtered);
 }
 
+/* ── LOAD LOGO (הטמעה כ-data URI) ── */
+function applyLogo(src){
+    if(!src)return;
+    BRAND_LOGO=src;
+    var head=document.querySelector(".logo-img"); if(head){head.src=src;head.style.display="";}
+    document.querySelectorAll(".hc-logo").forEach(function(im){im.src=src;im.style.display="";});
+    if(allItems.length) render(allItems); // בנה מחדש כדי שכרטיסים חדשים ישתמשו בלוגו
+}
+function loadLogo(event){
+    var f=event.target.files[0]; if(!f)return;
+    var rd=new FileReader();
+    rd.onload=function(e){
+        applyLogo(e.target.result);
+        try{localStorage.setItem("promoLogo",e.target.result);}catch(_){}
+        var st=document.getElementById("fSt"); if(st){st.textContent="✅ לוגו נטען";setTimeout(function(){st.textContent="";},4000);}
+    };
+    rd.readAsDataURL(f); event.target.value="";
+}
+
 /* ── LOAD IMAGES ── */
 function loadImgs(event){
     var files=Array.from(event.target.files);
@@ -824,7 +845,7 @@ function exportStatic(){
         '<div class="max-w-7xl mx-auto">',
         '<header style="background:white;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:14px 22px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid #dc2626;">',
         '<div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;">'+hSubTxt+'</div><div style="font-size:11px;color:#94a3b8;">'+allItems.length.toLocaleString()+' מבצעים</div></div>',
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="./logo.png" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1></div>',
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="'+BRAND_LOGO+'" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1></div>',
         '<div style="min-width:110px;text-align:left;font-size:12px;color:#94a3b8;">'+today+'</div>',
         '</header>',
         '<div style="margin-bottom:14px;position:relative;">',
@@ -919,6 +940,7 @@ window.onload=function(){
     try{var s=localStorage.getItem("promoCategoryOrder");if(s)catOrder=JSON.parse(s);}catch(e){}
     Object.keys(DEFAULT_COLORS).forEach(function(k){if(!catColors[k])catColors[k]=DEFAULT_COLORS[k];});
     try{var sc=localStorage.getItem("promoCategoryColors");if(sc){var pc=JSON.parse(sc);Object.keys(pc).forEach(function(k){catColors[k]=pc[k];});}}catch(e){}
+    try{var lg=localStorage.getItem("promoLogo");if(lg){BRAND_LOGO=lg;var h=document.querySelector(".logo-img");if(h)h.src=lg;}}catch(e){}
     initHeaderEdit();
     document.getElementById("noEl").style.display="block";
 };
