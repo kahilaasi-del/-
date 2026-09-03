@@ -613,6 +613,19 @@ function loadImgs(event){
     render(allItems); event.target.value="";
 }
 
+/* ── נרמול ערך מבצע לאחוז ──
+   אקסל שומר "80%" כמספר 0.8. הפונקציה ממירה מספר לאחוז (0.8->80%, 0.145->14.5%,
+   40->40%) ומשאירה טקסט קיים שכבר כולל % או נוסחה ("50%", "1=10%, 4=33%") כמו שהוא. */
+function normDeal(v){
+    var s=String(v==null?"":v).trim();
+    if(!s)return"";
+    if(s.indexOf("%")>=0)return s;                 // כבר אחוז/נוסחה — השאר
+    var n=parseFloat(s.replace(",","."));
+    if(isNaN(n)||n<=0)return s;                      // לא מספר חיובי — השאר כמו שהוא
+    var pct=n<=1?n*100:n;                            // 0.8->80 ; 40->40
+    return (Math.round(pct*10)/10)+"%";             // עד ספרה עשרונית אחת
+}
+
 /* ── LOAD EXCEL ── */
 function loadXLS(event){
     var file=event.target.files[0]; if(!file)return;
@@ -637,7 +650,7 @@ function loadXLS(event){
                 var id=String(row["מפתח פריט"]||"").trim(); if(!id)return;
                 if(isNaN(parseInt(id)))return;
                 var stk=parseInt(String(row[stockK]||"0").replace(/,/g,""))||0; if(!stk)return;
-                var deal=dealK?String(row[dealK]||"").trim():"";
+                var deal=normDeal(dealK?row[dealK]:"");
                 var ord=parseInt(String(row["סדר"]||"0"))||0;
                 parsed.push({
                     sortCode:String(row["קוד מיון פריט"]||"").trim(),
