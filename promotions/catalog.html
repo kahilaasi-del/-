@@ -756,6 +756,18 @@ function imgToDataURI(url,maxDim,q){
         im.src=url;
     });
 }
+/* המרת אלמנט תמונה טעון ל-data URI (PNG, שומר שקיפות — ללוגו) */
+function imgElToDataURI(imgEl,maxDim){
+    try{
+        var w=imgEl.naturalWidth,h=imgEl.naturalHeight;
+        if(!w||!h)return null;
+        var s=Math.min(1,maxDim/Math.max(w,h));
+        var cw=Math.max(1,Math.round(w*s)),ch=Math.max(1,Math.round(h*s));
+        var cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+        cv.getContext("2d").drawImage(imgEl,0,0,cw,ch);
+        return cv.toDataURL("image/png");
+    }catch(e){return null;}
+}
 
 /* ── EXPORT ── */
 async function exportStatic(){
@@ -773,6 +785,16 @@ async function exportStatic(){
         if(_d)imgData[uniq[_i]]=_d;
     }
     if(btn)btn.textContent="⏳ בונה קובץ...";
+
+    // הטמעת הלוגו: אם אינו כבר data URI, ננסה להמיר את הלוגו הטעון (קובץ ליד)
+    var logoOut=BRAND_LOGO;
+    if(BRAND_LOGO&&BRAND_LOGO.slice(0,5)!=="data:"){
+        var _lgEl=document.querySelector(".logo-img");
+        if(_lgEl&&_lgEl.complete&&_lgEl.naturalWidth){
+            var _ld=imgElToDataURI(_lgEl,300);
+            if(_ld)logoOut=_ld;
+        }
+    }
 
     var today=new Date().toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
     var _esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
@@ -815,7 +837,7 @@ async function exportStatic(){
             else if(pri==="חדש")sectionsHtml+='<div class="badge-new">✨ חדש</div>';
             sectionsHtml+='</div>';
             sectionsHtml+='<div class="hc-main"><div class="card-name">'+item.name+'</div><div class="hc-meta">'+metaHTML(item)+'</div></div>';
-            sectionsHtml+='<img class="hc-logo" src="'+BRAND_LOGO+'" alt="" onerror="this.style.display=\'none\'">';
+            sectionsHtml+='<img class="hc-logo" src="'+logoOut+'" alt="" onerror="this.style.display=\'none\'">';
             sectionsHtml+='<div class="hc-price">'+priceHTML(item,price);
             sectionsHtml+='<div class="qty-ctrl">';
             sectionsHtml+='<button data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-delta="-1" onclick="handleQty(this)" class="qbtn qbtn-minus">−</button>';
@@ -878,7 +900,7 @@ async function exportStatic(){
         '<div class="max-w-7xl mx-auto">',
         '<header style="background:white;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:14px 22px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid #dc2626;">',
         '<div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;">'+hSubTxt+'</div><div style="font-size:11px;color:#94a3b8;">'+allItems.length.toLocaleString()+' מבצעים</div></div>',
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="'+BRAND_LOGO+'" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1></div>',
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="'+logoOut+'" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1></div>',
         '<div style="min-width:110px;text-align:left;font-size:12px;color:#94a3b8;">'+today+'</div>',
         '</header>',
         '<div style="margin-bottom:14px;position:relative;">',
