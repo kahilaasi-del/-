@@ -39,6 +39,16 @@ CAT_HEADER = "קטגוריות ראשית"
 PRI_HEADER = "priority"
 KEY_HEADER = "מפתח פריט"
 
+# מיפוי ערכי priority לצורה הקנונית שהקטלוג מכיר (SUN/שמש->sun, STAR/כוכב->star)
+PRIORITY_MAP = {"sun": "sun", "star": "star", "שמש": "sun", "כוכב": "star",
+                "חדש": "חדש", "new": "חדש", "ניו": "חדש"}
+
+
+def norm_pri(v):
+    s = ("" if v is None else str(v).replace("‏", "").strip())
+    return PRIORITY_MAP.get(s.lower(), PRIORITY_MAP.get(s, s))
+
+
 
 def norm(v) -> str:
     return "" if v is None else str(v).replace("‏", "").strip()
@@ -83,6 +93,8 @@ def organize(input_path, sheet, add_visuals=True):
         vals = [ws.cell(r, c).value for c in cols]
         if all(v in (None, "") for v in vals):
             continue
+        if pri_pos is not None:
+            vals[pri_pos] = norm_pri(vals[pri_pos])  # נרמול לצורה קנונית (sun/star/חדש)
         data.append(vals)
 
     # סדר קטגוריות = סדר הופעה מקורי; #N/A / ריק בסוף
@@ -100,7 +112,7 @@ def organize(input_path, sheet, add_visuals=True):
         return (0, cat_order.index(c))
 
     def pri_rank(vals):
-        p = norm(vals[pri_pos]).lower() if pri_pos is not None else ""
+        p = norm_pri(vals[pri_pos]).lower() if pri_pos is not None else ""
         return 0 if p in PRIORITY_FIRST else 1  # sun/star ראשונים
 
     # מיון יציב: קטגוריה -> sun/star ראשון -> סדר מקורי נשמר

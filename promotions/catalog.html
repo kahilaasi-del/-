@@ -346,6 +346,12 @@ var DEFAULT_COLORS={"גלידות":"#00b0f0","פררו - קינדר":"#ff0000","
 var PALETTE=["#c00000","#ff0000","#ffc000","#ffff00","#92d050","#00b050","#00b0f0","#0070c0","#002060","#7030a0","#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c","#3498db","#9b59b6","#e91e63","#ff5722","#795548","#ffcccc","#ffe0b2","#fff9c4","#c8e6c9","#b2dfdb","#bbdefb","#e1bee7","#fce4ec","#f3e5f5","#e8eaf6","#7f0000","#bf360c","#827717","#1b5e20","#004d40","#0d47a1","#4a148c","#880e4f","#3e2723","#212121"];
 
 function mk(t){return document.createElement(t);}
+/* נרמול priority: SUN/שמש->sun, STAR/כוכב->star, חדש/new->חדש (ללא תלות באותיות/שפה) */
+function priNorm(v){
+    var s=String(v==null?"":v).trim(), l=s.toLowerCase();
+    var map={"sun":"sun","שמש":"sun","star":"star","כוכב":"star","חדש":"חדש","new":"חדש","ניו":"חדש"};
+    return map[l]||map[s]||"";
+}
 
 /* ── עזרי HTML משותפים (כרטיס חי + ייצוא סטטי) ── */
 function metaHTML(item){
@@ -402,7 +408,7 @@ function buildCard(item){
     img.alt=nm;
     img.onerror=function(){this.style.display="none";var ph=mk("div");ph.className="no-img";ph.textContent="🎁";imgD.appendChild(ph);};
     imgD.appendChild(img);
-    var pri=(item.priority||"").trim();
+    var pri=priNorm(item.priority);
     if(pri==="sun"||pri==="star"){var bp=mk("div");bp.className="badge-pri";bp.textContent=pri==="sun"?"☀️":"⭐";imgD.appendChild(bp);}
     else if(pri==="חדש"){var bn=mk("div");bn.className="badge-new";bn.textContent="✨ חדש";imgD.appendChild(bn);}
     var cdot=mk("div"); cdot.className="color-dot np"; cdot.style.background=col;
@@ -733,7 +739,7 @@ function loadXLS(event){
                     deal:deal,
                     carton:String(row["כמות בקרטון"]||"").trim(),
                     pallet:String(row["כמות במשטח"]||"").trim(),
-                    deposit:String(row["פריט פקדון"]||row["deposit"]||"").trim(),
+                    deposit:String(row["פריט פקדון"]||row["פריט פיקדון"]||row["deposit"]||"").trim(),
                     kosher:String(row["כשרות"]||"").trim(),
                     validity:String(row["תוקף 1 במוצר"]||"").trim(),
                     stock:String(stk)
@@ -851,7 +857,7 @@ async function exportStatic(){
             sectionsHtml+='<div class="card-img"><div class="cat-rail" style="background:'+col+';"></div>';
             var _isrc=imgData[item.id]||(IMGF+item.id+IMGE);
             sectionsHtml+='<img src="'+_isrc+'" alt="'+item.name+'" onerror="this.style.display=\'none\'">';
-            var pri=(item.priority||"").trim();
+            var pri=priNorm(item.priority);
             if(pri==="sun")sectionsHtml+='<div class="badge-pri">☀️</div>';
             else if(pri==="star")sectionsHtml+='<div class="badge-pri">⭐</div>';
             else if(pri==="חדש")sectionsHtml+='<div class="badge-new">✨ חדש</div>';
