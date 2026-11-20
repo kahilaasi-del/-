@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>מבצעי אוגוסט 2026</title>
+<title>מבצעי נובמבר 2026</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -54,9 +54,15 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 .deal-stamp .l { font-size:8.5px; font-weight:800; margin-top:2px; }
 
 /* priority (ימין-עליון) */
-.badge-pri { position:absolute; top:12px; inset-inline-end:12px; font-size:23px; z-index:3; filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); line-height:1; }
-.badge-new { position:absolute; top:12px; inset-inline-end:12px; z-index:3; background:#52a8dc; color:white; font-size:10px; font-weight:900; padding:2px 8px; border-radius:99px; }
+.badge-pri { position:absolute; bottom:10px; inset-inline-end:12px; font-size:23px; z-index:3; filter:drop-shadow(0 1px 2px rgba(0,0,0,.25)); line-height:1; }
+.badge-new { position:absolute; bottom:10px; inset-inline-end:12px; z-index:3; background:#52a8dc; color:white; font-size:10px; font-weight:900; padding:2px 8px; border-radius:99px; }
 .color-dot { position:absolute; bottom:10px; inset-inline-start:10px; width:20px; height:20px; border-radius:50%; border:2px solid #fff; cursor:pointer; z-index:3; box-shadow:0 2px 5px rgba(0,0,0,.2); }
+
+/* תג כשרות (ירוק, פינה ימין-עליון) — סימטרי מול חותמת המבצע */
+.kbadge { position:absolute; top:12px; inset-inline-end:12px; z-index:3;
+    background:rgba(255,255,255,.95); color:#15803d; border:1px solid #bfe3c8; border-radius:9px;
+    padding:2px 8px; font-size:10px; font-weight:800; max-width:58%; text-align:center; line-height:1.15;
+    box-shadow:0 1px 4px rgba(0,0,0,.08); }
 
 /* גוף */
 .card-body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
@@ -182,36 +188,60 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 }
 @media (max-width:360px){ .grid{ grid-template-columns:1fr!important; } }
 
-/* הדפסה */
-@page { size:A4 portrait; margin:1cm 0.8cm; }
+/* ===== הדפסה — עמודים מעומדים A4: כותרת מלאה + 12 כרטיסים ממורכזים + פס הזמנות בכל עמוד ===== */
+#printRoot{ display:none; }
+@page { size:A4 portrait; margin:0; }
 @media print {
-  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-  body{background:white!important;padding:0!important;}
-  .np{display:none!important;}
-  .max-w-7xl{max-width:100%!important;margin:0!important;}
-  .site-header{box-shadow:none!important;border-radius:0!important;margin-bottom:10px!important;padding:6px 12px!important;page-break-after:avoid!important;}
-  .cat-section{page-break-inside:avoid!important;margin-bottom:12px!important;}
-  .cat-header{margin-bottom:8px!important;padding-bottom:6px!important;}
-  .cat-header h2{font-size:13px!important;}
-  .cat-count{font-size:9px!important;}
-  /* אריחים מרובעים להדפסה */
-  .grid{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:6px!important;}
-  .card{page-break-inside:avoid!important;break-inside:avoid!important;box-shadow:none!important;
-    border:1px solid #cfe8f6!important;border-radius:10px!important;}
-  .card-img{height:95px!important;}
-  .card-img img{padding:4px!important;}
-  .deal-stamp{width:44px!important;height:44px!important;top:6px!important;inset-inline-start:6px!important;}
-  .deal-stamp .b{font-size:13px!important;} .deal-stamp .l{font-size:6px!important;}
-  .card-body{padding:7px 8px!important;gap:4px!important;}
-  .card-name{font-size:9px!important;min-height:2.4em!important;}
-  .buyget{font-size:8px!important;padding:2px 6px!important;}
-  .hc-meta{font-size:7px!important;gap:1px 5px!important;}
-  .pnet-label{font-size:7px!important;}
-  .pnet-val{font-size:13px!important;}
-  .pstrike{font-size:8px!important;}
-  .badge-pri{font-size:13px!important;}
-  .badge-new{font-size:6.5px!important;}
-  .qty-ctrl,.color-dot,.in-cart-mark{display:none!important;}
+  *{ -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+  html,body{ background:#fff!important; margin:0!important; padding:0!important; }
+  body>*:not(#printRoot){ display:none!important; }
+  #printRoot{ display:block!important; }
+
+  .pp-page{ width:210mm; min-height:297mm; box-sizing:border-box; padding:7mm; background:#f4f8fb;
+    display:flex; flex-direction:column; break-after:page; page-break-after:always; overflow:hidden; }
+  .pp-page:last-child{ break-after:auto; page-break-after:auto; }
+
+  /* כרטיס מותג לבן (כמו באתר) */
+  .pp-brand{ display:flex; align-items:center; justify-content:center; gap:16px; background:#fff;
+    border-radius:16px; padding:9px 18px; border-bottom:4px solid #52a8dc; flex-wrap:wrap; }
+  .pp-brand .lg{ display:flex; align-items:center; gap:9px; }
+  .pp-brand .lg img{ height:36px; } .pp-brand .lg span{ font-size:14px; font-weight:800; color:#1c2e54; }
+  .pp-brand .tt{ font-size:22px; font-weight:900; color:#1c2e54; }
+  .pp-brand .vv{ background:#eaf6fc; color:#1c2e54; border:1.5px solid #cfe8f6; border-radius:99px; padding:5px 13px; font-size:12px; font-weight:800; }
+
+  /* פס קטגוריה כחול מלא */
+  .pp-cat{ display:flex; align-items:center; gap:11px; background:linear-gradient(90deg,#52a8dc,#1c2e54);
+    color:#fff; border-radius:11px; padding:9px 18px; margin-top:10px; }
+  .pp-cat h2{ font-size:17px; font-weight:900; margin:0; }
+  .pp-cat .cnt{ background:rgba(255,255,255,.22); border-radius:99px; padding:3px 11px; font-size:12px; font-weight:800; }
+
+  /* גוף — 12 כרטיסים ממורכזים (עמוד חלקי: צמוד למעלה) */
+  .pp-body{ flex:1 1 auto; display:flex; flex-direction:column; justify-content:center; padding:6px 0; }
+  .pp-page.partial .pp-body{ justify-content:flex-start; }
+  .pp-grid{ display:grid; grid-template-columns:repeat(4,1fr); grid-auto-rows:1fr; gap:9px; }
+
+  /* פס הזמנות בתחתית כל עמוד */
+  .pp-foot{ background:linear-gradient(90deg,#1c2e54,#52a8dc); color:#fff; border-radius:13px;
+    padding:10px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .pp-foot img{ height:30px; background:#fff; border-radius:7px; padding:4px; }
+  .pp-foot .c{ font-size:13px; font-weight:800; } .pp-foot .s{ font-size:11px; opacity:.92; font-weight:600; }
+
+  /* כרטיס קומפקטי בתוך עמוד הדפסה */
+  .pp-grid .card{ box-shadow:none!important; border:1px solid #cfe8f6!important; border-radius:12px!important; break-inside:avoid!important; }
+  .pp-grid .card-img{ height:88px!important; }
+  .pp-grid .card-img img{ padding:5px!important; }
+  .pp-grid .deal-stamp{ width:44px!important; height:44px!important; top:7px!important; inset-inline-start:7px!important;
+    background:#dc2626!important; background-image:none!important; box-shadow:none!important; border:2px solid #fff!important; }
+  .pp-grid .deal-stamp::before{ display:none!important; }
+  .pp-grid .deal-stamp .b{ font-size:13px!important; } .pp-grid .deal-stamp .l{ font-size:6px!important; }
+  .pp-grid .kbadge{ top:8px!important; inset-inline-end:8px!important; font-size:8px!important; padding:1px 6px!important; box-shadow:none!important; }
+  .pp-grid .card-body{ padding:8px 9px 9px!important; gap:5px!important; }
+  .pp-grid .card-name{ font-size:10.5px!important; min-height:2.6em!important; }
+  .pp-grid .buyget{ font-size:9.5px!important; padding:2px 7px!important; box-shadow:none!important; }
+  .pp-grid .hc-meta{ font-size:8.5px!important; gap:2px 6px!important; }
+  .pp-grid .pnet-label{ font-size:7.5px!important; } .pp-grid .pnet-val{ font-size:16px!important; } .pp-grid .pstrike{ font-size:9px!important; }
+  .pp-grid .badge-pri{ font-size:14px!important; } .pp-grid .badge-new{ font-size:6.5px!important; }
+  .pp-grid .qty-ctrl, .pp-grid .color-dot, .pp-grid .in-cart-mark{ display:none!important; }
 }
 </style>
 </head>
@@ -285,12 +315,13 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 <!-- HEADER -->
 <header class="site-header">
   <div style="text-align:right;min-width:120px;">
-    <div id="hSub" class="h-edit" contenteditable="true" spellcheck="false" style="font-size:13px;font-weight:700;color:#1e293b;">🔥 מבצעי אוגוסט 2026</div>
+    <div id="hSub" class="h-edit" contenteditable="true" spellcheck="false" style="font-size:13px;font-weight:700;color:#1e293b;">🔥 מבצעי נובמבר 2026</div>
     <div id="itemCount" style="font-size:11px;color:#94a3b8;margin-top:1px;"></div>
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
     <img src="./logo.png" class="logo-img" alt="לוגו" onerror="this.style.display='none'">
     <h1 id="hTitle" class="h-edit" contenteditable="true" spellcheck="false" style="font-size:1.6rem;font-weight:900;color:#1e293b;">מבצעי החודש</h1>
+    <div id="hValid" class="h-edit" contenteditable="true" spellcheck="false" style="font-size:12.5px;font-weight:800;color:#1c2e54;background:#eaf6fc;border:1.5px solid #cfe8f6;border-radius:99px;padding:3px 12px;">🗓️ המבצעים בתוקף עד 30.11.26</div>
   </div>
   <div style="min-width:110px;text-align:left;font-size:12px;color:#94a3b8;" id="hDate"></div>
 </header>
@@ -312,13 +343,16 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
   <div class="flex gap-3 items-center">
     <input type="text" id="srch" oninput="doSearch()" placeholder="🔍 חיפוש..."
       class="bg-white border-2 border-sky-200 focus:border-sky-500 rounded-full py-2 px-4 text-sm outline-none" style="direction:rtl;width:180px;">
-    <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-full shadow">🖨️ הדפס</button>
+    <button onclick="doPrint()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-full shadow">🖨️ הדפס</button>
   </div>
 </div>
 
 <div id="noEl" style="display:none;text-align:center;padding:60px;color:#94a3b8;font-size:18px;">טען קובץ אקסל להתחלה 📂</div>
 <div id="itemsGrid"></div>
 </div>
+
+<!-- שכבת הדפסה מעומדת (נבנית לפני הדפסה; מוצגת רק בהדפסה) -->
+<div id="printRoot"></div>
 
 <script>
 var IMGF="./images/", IMGE=".jpg";
@@ -328,7 +362,7 @@ var imgCache={}, allItems=[], catOrder=[], catColors={}, cart={}, custOrder=[], 
 
 var DEFAULT_ORDER=["גלידות","פררו - קינדר","מסטיקים | סוכריות | לקקנים","שוקולדים קו קופות","שוקולדים טבלאות | בונבונירות","עוגיות  | עוגות | וופלים | עוגות אישיות","חטיפים מלוחים | פיצוחים | מוצרי אירוח","חטיפי אנרגיה | דגני בוקר | מוצרי בריאות","מוצרי חלבון","מוצרים ארה\"ב","מסטיקים | סוכריות | לקקנים","שתייה קלה | טרופיות | חטיפי קרח","משקאות אנרגיה | בירות | יין | אלכוהול","רטבים | ממרחים | יבשים | אפיה | שמנים","מוצרים למשקל | לקריצים | גומי תפזורת | טופי","צעצועים | ממתקים","שתיה חמה | קפה | תה"];
 
-var DEFAULT_COLORS={"גלידות":"#00b0f0","פררו - קינדר":"#ff0000","מסטיקים | סוכריות | לקקנים":"#f59e0b","שוקולדים קו קופות":"#f97316","שוקולדים טבלאות | בונבונירות":"#ffc000","עוגיות  | עוגות | וופלים | עוגות אישיות":"#a855f7","חטיפים מלוחים | פיצוחים | מוצרי אירוח":"#22c55e","חטיפי אנרגיה | דגני בוקר | מוצרי בריאות":"#92d050","מוצרי חלבון":"#00b050","מוצרים ארה\"ב":"#0070c0","שתייה קלה | טרופיות | חטיפי קרח":"#38bdf8","משקאות אנרגיה | בירות | יין | אלכוהול":"#6366f1","רטבים | ממרחים | יבשים | אפיה | שמנים":"#84cc16","מוצרים למשקל | לקריצים | גומי תפזורת | טופי":"#ec4899","צעצועים | ממתקים":"#14b8a6","שתיה חמה | קפה | תה":"#795548"};
+var DEFAULT_COLORS={"מעיין יבוא":"#52a8dc","קידום מוצרים":"#1c2e54","גלידות":"#00b0f0","פררו - קינדר":"#ff0000","מסטיקים | סוכריות | לקקנים":"#f59e0b","שוקולדים קו קופות":"#f97316","שוקולדים טבלאות | בונבונירות":"#ffc000","עוגיות  | עוגות | וופלים | עוגות אישיות":"#a855f7","חטיפים מלוחים | פיצוחים | מוצרי אירוח":"#22c55e","חטיפי אנרגיה | דגני בוקר | מוצרי בריאות":"#92d050","מוצרי חלבון":"#00b050","מוצרים ארה\"ב":"#0070c0","שתייה קלה | טרופיות | חטיפי קרח":"#38bdf8","משקאות אנרגיה | בירות | יין | אלכוהול":"#6366f1","רטבים | ממרחים | יבשים | אפיה | שמנים":"#84cc16","מוצרים למשקל | לקריצים | גומי תפזורת | טופי":"#ec4899","צעצועים | ממתקים":"#14b8a6","שתיה חמה | קפה | תה":"#795548"};
 
 var PALETTE=["#c00000","#ff0000","#ffc000","#ffff00","#92d050","#00b050","#00b0f0","#0070c0","#002060","#7030a0","#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c","#3498db","#9b59b6","#e91e63","#ff5722","#795548","#ffcccc","#ffe0b2","#fff9c4","#c8e6c9","#b2dfdb","#bbdefb","#e1bee7","#fce4ec","#f3e5f5","#e8eaf6","#7f0000","#bf360c","#827717","#1b5e20","#004d40","#0d47a1","#4a148c","#880e4f","#3e2723","#212121"];
 
@@ -338,6 +372,17 @@ function priNorm(v){
     var s=String(v==null?"":v).trim(), l=s.toLowerCase();
     var map={"sun":"sun","שמש":"sun","star":"star","כוכב":"star","חדש":"חדש","new":"חדש","ניו":"חדש"};
     return map[l]||map[s]||"";
+}
+
+/* ── איחוד קטגוריות לפלייר ──
+   כל "מעיין יבוא *" -> "מעיין יבוא" ; כל השאר -> "קידום מוצרים".
+   לביטול האיחוד (קטגוריות מקוריות לפי ספק): שנה ל-CAT_MERGE=false. */
+var CAT_MERGE=true;
+function normalizeCat(raw){
+    var c=String(raw==null?"":raw).trim();
+    if(!CAT_MERGE) return c||"כללי";
+    if(/^מעיין\s*יבוא/.test(c)) return "מעיין יבוא";
+    return "קידום מוצרים";
 }
 
 /* ── עזרי HTML משותפים (כרטיס חי + ייצוא סטטי) ── */
@@ -355,16 +400,27 @@ function dealTop(deal){ // מחזיר {qty,pct} של המדרגה עם אחוז 
 }
 function buyGet(deal){var t=dealTop(deal);if(!t)return"";return t.qty>1?("קנה "+t.qty+" קבל "+pctStr(t.pct)+"%"):(pctStr(t.pct)+"% הנחה");}
 function packBag(name){var m=String(name||"").match(/(\d+)\s*\/\s*(\d+)/);return m?m[2]:"";}
+/* פורמט תאריך תוקף: "28-11-2027" -> "28.11.27" */
+function fmtValid(v){
+    var s=String(v==null?"":v).trim(); if(!s)return"";
+    var m=s.match(/(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
+    if(m){var y=m[3]; y=y.length>2?y.slice(-2):y; return (("0"+m[1]).slice(-2))+"."+(("0"+m[2]).slice(-2))+"."+y;}
+    return s;
+}
 
 function metaHTML(item){
     var p=[];
     p.push('<span class="sku">מק"ט <b>'+item.id+'</b></span>');
-    if(item.kosher&&String(item.kosher).trim()) p.push('<span class="k">🔵 '+item.kosher+'</span>');
-    var pb=packBag(item.name); if(pb) p.push('<span class="pack">📦 '+pb+' בחבילה</span>');
-    var c=parseInt(item.carton)||0; if(c>0) p.push('<span>קרטון '+c+'</span>');
-    if(item.validity&&String(item.validity).trim()) p.push('<span class="v">📅 '+item.validity+'</span>');
-    if(item.deposit&&String(item.deposit).trim()&&String(item.deposit).trim()!=="0") p.push('<span>♻️ פיקדון</span>');
-    return p.join('<span class="sep"></span>');
+    var pb=packBag(item.name); if(pb) p.push('<span class="pack">'+pb+' בחבילה</span>');
+    var c=parseInt(item.carton)||0; if(c>0) p.push('<span class="pack">קרטון '+c+'</span>');
+    var vd=fmtValid(item.validity); if(vd) p.push('<span class="pack">תוקף '+vd+'</span>');
+    if(item.deposit&&String(item.deposit).trim()&&String(item.deposit).trim()!=="0") p.push('<span class="pack">♻️ פיקדון</span>');
+    return p.join('');
+}
+/* תג כשרות (ירוק, פינה) — HTML משותף לכרטיס חי ולייצוא/הדפסה */
+function kosherBadgeHTML(item){
+    var k=item.kosher&&String(item.kosher).trim()?String(item.kosher).trim():"";
+    return k?'<div class="kbadge">✡ '+k+'</div>':"";
 }
 function priceHTML(item,price){
     if(!(price>0)) return '<div class="priceinfo"></div>';
@@ -379,6 +435,104 @@ function priceHTML(item,price){
 /* צבע טקסט קריא מעל צבע רקע (שחור/לבן לפי בהירות) */
 function lum(hex){hex=String(hex||"").replace("#","");if(hex.length===3)hex=hex.replace(/./g,"$&$&");if(hex.length<6)return 0;var r=parseInt(hex.substr(0,2),16),g=parseInt(hex.substr(2,2),16),b=parseInt(hex.substr(4,2),16);return (0.299*r+0.587*g+0.114*b)/255;}
 function plusFg(col){return lum(col)>0.7?"#0f172a":"#fff";}
+
+/* ── כרטיס סטטי (HTML) — משותף לייצוא ולעמודי הדפסה ── */
+function _enc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function staticCardHTML(item,col,opts){
+    opts=opts||{};
+    var price=parseFloat(String(item.price||"0").replace(/,/g,""))||0;
+    var src;
+    if(opts.imgMap){ src=opts.imgMap[item.id]||(IMGF+item.id+IMGE); }
+    else { src=imgCache[item.id]||(IMGF+item.id+IMGE); }
+    var h='<div class="card" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-bar="'+(item.bar||"")+'" data-cat="'+(item.cat||"")+'">';
+    h+='<div class="card-img"><div class="cat-rail" style="background:'+col+';"></div>';
+    h+='<img src="'+src+'" alt="'+_enc(item.name)+'" onerror="this.style.display=\'none\'">';
+    var t=dealTop(item.deal);
+    if(t)h+='<div class="deal-stamp"><div class="b">'+pctStr(t.pct)+'%</div><div class="l">מבצע</div></div>';
+    h+=kosherBadgeHTML(item);
+    var pri=priNorm(item.priority);
+    if(pri==="sun")h+='<div class="badge-pri">☀️</div>';
+    else if(pri==="star")h+='<div class="badge-pri">⭐</div>';
+    else if(pri==="חדש")h+='<div class="badge-new">✨ חדש</div>';
+    h+='</div>';
+    h+='<div class="card-body"><div class="card-name">'+_enc(item.name)+'</div>';
+    var bg=buyGet(item.deal); if(bg)h+='<div class="buyget">'+bg+'</div>';
+    h+='<div class="hc-meta">'+metaHTML(item)+'</div><div class="card-sep"></div>';
+    h+='<div class="hc-price">'+priceHTML(item,price);
+    if(opts.interactive){
+        h+='<div class="qty-ctrl">';
+        h+='<button data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-delta="-1" onclick="handleQty(this)" class="qbtn qbtn-minus">−</button>';
+        h+='<input type="number" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" id="q_'+item.id+'" value="0" min="0" class="qinp" oninput="handleQtyInp(this)">';
+        h+='<button data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-delta="1" onclick="handleQty(this)" class="qbtn qbtn-plus">+</button>';
+        h+='</div><span id="ic_'+item.id+'" class="in-cart-mark" style="display:none;">✓</span>';
+    }
+    h+='</div></div></div>';
+    return h;
+}
+
+/* ── סדר קטגוריות+פריטים (זהה ל-render) — משותף למסך/הדפסה/ייצוא ── */
+function orderedSectionsFor(items){
+    var catMap={};
+    items.forEach(function(it){var c=it.cat||"כללי";(catMap[c]=catMap[c]||[]).push(it);});
+    var order=catOrder.length>0?catOrder.slice():DEFAULT_ORDER.slice();
+    Object.keys(catMap).forEach(function(c){if(order.indexOf(c)<0)order.push(c);});
+    var out=[];
+    order.forEach(function(cat,idx){
+        if(!catMap[cat]||!catMap[cat].length)return;
+        var col=catColors[cat]||DEFAULT_COLORS[cat]||PALETTE[idx%PALETTE.length];
+        var customOrd=itemCustomOrder[cat]||[];
+        var sorted=catMap[cat].slice().sort(function(a,b){
+            var ia=customOrd.indexOf(a.id),ib=customOrd.indexOf(b.id);
+            if(ia>=0&&ib>=0)return ia-ib; if(ia>=0)return -1; if(ib>=0)return 1;
+            var oa=parseInt(a.order)||0,ob=parseInt(b.order)||0;
+            if(oa>0&&ob>0)return oa-ob; if(oa>0)return -1; if(ob>0)return 1;
+            return (parseInt(a.sortCode)||0)-(parseInt(b.sortCode)||0);
+        });
+        out.push({cat:cat,col:col,items:sorted});
+    });
+    return out;
+}
+
+/* ── בונה עמודי הדפסה A4: כל עמוד = כותרת מלאה + 12 כרטיסים ממורכזים + פס הזמנות ── */
+function buildPrintPagesHTML(opts){
+    opts=opts||{};
+    var logo=opts.logo||BRAND_LOGO||"";
+    var title=_enc(opts.title||((document.getElementById("hTitle")||{}).textContent||"מבצעי החודש"));
+    var validRaw=(opts.valid!=null?opts.valid:((document.getElementById("hValid")||{}).textContent||"")).trim();
+    var validShort=_enc(validRaw.replace(/^🗓️\s*/,"").trim());
+    var sections=orderedSectionsFor(opts.items||allItems);
+    var flat=[], total={};
+    sections.forEach(function(s){ total[s.cat]=s.items.length; s.items.forEach(function(it){ flat.push({it:it,cat:s.cat,col:s.col}); }); });
+    if(!flat.length) return "";
+    var PER=12, pagesHtml="";
+    for(var i=0;i<flat.length;i+=PER){
+        var pg=flat.slice(i,i+PER), partial=pg.length<PER;
+        var cats=[],seen={};
+        pg.forEach(function(x){if(!seen[x.cat]){seen[x.cat]=1;cats.push(_enc(x.cat));}});
+        var catLabel,cntHtml="";
+        if(cats.length===1){catLabel=cats[0];cntHtml='<span class="cnt">'+total[pg[0].cat]+' מבצעים</span>';}
+        else{catLabel=cats.join(" ← ");}
+        var brand='<div class="pp-brand"><div class="lg"><img src="'+logo+'" onerror="this.style.display=\'none\'"><span>מעיין נציגויות</span></div><div class="tt">'+title+'</div>'+(validShort?'<div class="vv">🗓️ '+validShort+'</div>':'')+'</div>';
+        var catban='<div class="pp-cat"><h2>'+catLabel+'</h2>'+cntHtml+'</div>';
+        var cards=pg.map(function(x){return staticCardHTML(x.it,x.col,{imgMap:opts.imgMap});}).join("");
+        var foot='<div class="pp-foot"><img src="'+logo+'" onerror="this.style.display=\'none\'"><div class="c">📲 להזמנות בוואטסאפ</div><div class="s">מעיין נציגויות'+(validShort?' · '+validShort:'')+'</div></div>';
+        pagesHtml+='<div class="pp-page'+(partial?' partial':'')+'">'+brand+catban+'<div class="pp-body"><div class="pp-grid">'+cards+'</div></div>'+foot+'</div>';
+    }
+    return pagesHtml;
+}
+function rebuildPrintRoot(){
+    var root=document.getElementById("printRoot"); if(!root)return;
+    root.innerHTML=buildPrintPagesHTML({items:allItems});
+}
+function doPrint(){
+    if(!allItems.length){window.print();return;}
+    rebuildPrintRoot();
+    setTimeout(function(){window.print();},40);
+}
+window.addEventListener("beforeprint",function(){
+    var r=document.getElementById("printRoot");
+    if(r&&allItems.length&&!r.innerHTML.trim()) rebuildPrintRoot();
+});
 
 /* ── BUILD CARD (מרובע, תמונה למעלה) ── */
 function buildCard(item){
@@ -403,6 +557,8 @@ function buildCard(item){
     /* חותמת מבצע */
     var t=dealTop(item.deal);
     if(t){var st=mk("div");st.className="deal-stamp";st.innerHTML='<div class="b">'+pctStr(t.pct)+'%</div><div class="l">מבצע</div>';imgD.appendChild(st);}
+    /* תג כשרות (ירוק, פינה) */
+    if(item.kosher&&String(item.kosher).trim()){var kb=mk("div");kb.className="kbadge";kb.textContent="✡ "+String(item.kosher).trim();imgD.appendChild(kb);}
     /* priority */
     var pri=priNorm(item.priority);
     if(pri==="sun"||pri==="star"){var bp=mk("div");bp.className="badge-pri";bp.textContent=pri==="sun"?"☀️":"⭐";imgD.appendChild(bp);}
@@ -728,7 +884,7 @@ function loadXLS(event){
                     id:id, name:String(row["שם פריט"]||"").trim(),
                     bar:String(row["בר קוד"]||"").trim(),
                     priority:String(row["priority"]||"").trim(),
-                    cat:String(row["קטגוריות ראשית"]||"").trim(),
+                    cat:normalizeCat(row["קטגוריות ראשית"]),
                     price:String(parseFloat(String(row["מחיר מכירה"]||"0").replace(/,/g,""))||0),
                     deal:deal,
                     carton:String(row["כמות בקרטון"]||"").trim(),
@@ -817,9 +973,11 @@ async function exportStatic(){
     }
 
     var today=new Date().toLocaleDateString("he-IL",{year:"numeric",month:"long",day:"numeric"});
-    var _esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");};
+    var _esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");};
     var hTitleTxt=_esc((document.getElementById("hTitle")||{}).textContent||"מבצעי החודש");
-    var hSubTxt=_esc((document.getElementById("hSub")||{}).textContent||"🔥 מבצעי אוגוסט 2026");
+    var hSubTxt=_esc((document.getElementById("hSub")||{}).textContent||"🔥 מבצעי נובמבר 2026");
+    var hValidRaw=((document.getElementById("hValid")||{}).textContent||"🗓️ המבצעים בתוקף עד 30.11.26").trim();
+    var hValidTxt=_esc(hValidRaw);
     var cssText="";
     Array.from(document.styleSheets).forEach(function(ss){try{Array.from(ss.cssRules).forEach(function(r){cssText+=r.cssText+"\n";});}catch(e){}});
 
@@ -846,30 +1004,7 @@ async function exportStatic(){
         sectionsHtml+='</div>';
         sectionsHtml+='<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">';
         sorted.forEach(function(item){
-            var price=parseFloat(String(item.price||"0").replace(/,/g,""))||0;
-            sectionsHtml+='<div class="card" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-bar="'+(item.bar||"")+'" data-cat="'+(item.cat||"")+'">';
-            sectionsHtml+='<div class="card-img"><div class="cat-rail" style="background:'+col+';"></div>';
-            var _isrc=imgData[item.id]||(IMGF+item.id+IMGE);
-            sectionsHtml+='<img src="'+_isrc+'" alt="'+item.name+'" onerror="this.style.display=\'none\'">';
-            var _t=dealTop(item.deal);
-            if(_t)sectionsHtml+='<div class="deal-stamp"><div class="b">'+pctStr(_t.pct)+'%</div><div class="l">מבצע</div></div>';
-            var pri=priNorm(item.priority);
-            if(pri==="sun")sectionsHtml+='<div class="badge-pri">☀️</div>';
-            else if(pri==="star")sectionsHtml+='<div class="badge-pri">⭐</div>';
-            else if(pri==="חדש")sectionsHtml+='<div class="badge-new">✨ חדש</div>';
-            sectionsHtml+='</div>';
-            sectionsHtml+='<div class="card-body"><div class="card-name">'+item.name+'</div>';
-            var _bg=buyGet(item.deal); if(_bg)sectionsHtml+='<div class="buyget">'+_bg+'</div>';
-            sectionsHtml+='<div class="hc-meta">'+metaHTML(item)+'</div><div class="card-sep"></div>';
-            sectionsHtml+='<div class="hc-price">'+priceHTML(item,price);
-            sectionsHtml+='<div class="qty-ctrl">';
-            sectionsHtml+='<button data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-delta="-1" onclick="handleQty(this)" class="qbtn qbtn-minus">−</button>';
-            sectionsHtml+='<input type="number" data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" id="q_'+item.id+'" value="0" min="0" class="qinp" oninput="handleQtyInp(this)">';
-            sectionsHtml+='<button data-id="'+item.id+'" data-name="'+encodeURIComponent(item.name)+'" data-delta="1" onclick="handleQty(this)" class="qbtn qbtn-plus">+</button>';
-            sectionsHtml+='</div>';
-            sectionsHtml+='<span id="ic_'+item.id+'" class="in-cart-mark" style="display:none;">✓</span>';
-            sectionsHtml+='</div>';
-            sectionsHtml+='</div>';
+            sectionsHtml+=staticCardHTML(item,col,{interactive:true,imgMap:imgData});
         });
         sectionsHtml+='</div></div>';
     });
@@ -911,6 +1046,8 @@ async function exportStatic(){
         '</div></div></div>'
     ].join("\n");
 
+    var printPagesHtml=buildPrintPagesHTML({items:allItems,logo:logoOut,imgMap:imgData,title:((document.getElementById("hTitle")||{}).textContent||"מבצעי החודש"),valid:hValidRaw});
+
     var html=[
         '<!DOCTYPE html><html lang="he" dir="rtl"><head>',
         '<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">',
@@ -923,7 +1060,7 @@ async function exportStatic(){
         '<div class="max-w-7xl mx-auto">',
         '<header class="site-header" style="background:white;border-radius:20px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:14px 22px;margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;border-bottom:4px solid #52a8dc;">',
         '<div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:#1e293b;">'+hSubTxt+'</div><div style="font-size:11px;color:#94a3b8;">'+allItems.length.toLocaleString()+' מבצעים</div></div>',
-        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="'+logoOut+'" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1></div>',
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;"><img src="'+logoOut+'" style="height:54px;width:auto;object-fit:contain;" onerror="this.style.display=\'none\'"><h1 style="font-size:1.6rem;font-weight:900;color:#1e293b;">'+hTitleTxt+'</h1><div style="font-size:12.5px;font-weight:800;color:#1c2e54;background:#eaf6fc;border:1.5px solid #cfe8f6;border-radius:99px;padding:3px 12px;">'+hValidTxt+'</div></div>',
         '<div style="min-width:110px;text-align:left;font-size:12px;color:#94a3b8;">'+today+'</div>',
         '</header>',
         '<div style="margin-bottom:14px;position:relative;">',
@@ -932,6 +1069,7 @@ async function exportStatic(){
         '</div>',
         sectionsHtml,
         '</div>',
+        '<div id="printRoot">'+printPagesHtml+'</div>',
         '<script>'+sc+'<\/script>',
         '</body></html>'
     ].join("\n");
@@ -1024,7 +1162,7 @@ window.onload=function(){
 };
 /* כותרות ניתנות לעריכה — שחזור ושמירה בדפדפן */
 function initHeaderEdit(){
-    ["hTitle","hSub"].forEach(function(id){
+    ["hTitle","hSub","hValid"].forEach(function(id){
         var el=document.getElementById(id); if(!el)return;
         try{var s=localStorage.getItem("promo_"+id);if(s!=null&&String(s).trim())el.textContent=s;}catch(e){}
         el.title="לחץ לעריכת הכותרת";
