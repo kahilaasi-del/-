@@ -527,23 +527,19 @@ function buildPrintPagesHTML(opts){
     var validRaw=(opts.valid!=null?opts.valid:((document.getElementById("hValid")||{}).textContent||"")).trim();
     var validShort=_enc(validRaw.replace(/^🗓️\s*/,"").trim());
     var sections=orderedSectionsFor(opts.items||allItems);
-    var flat=[], total={};
-    sections.forEach(function(s){ total[s.cat]=s.items.length; s.items.forEach(function(it){ flat.push({it:it,cat:s.cat,col:s.col}); }); });
-    if(!flat.length) return "";
+    if(!sections.length) return "";
     var PER=12, pagesHtml="";
-    for(var i=0;i<flat.length;i+=PER){
-        var pg=flat.slice(i,i+PER), partial=pg.length<PER;
-        var cats=[],seen={};
-        pg.forEach(function(x){if(!seen[x.cat]){seen[x.cat]=1;cats.push(_enc(x.cat));}});
-        var catLabel,cntHtml="";
-        if(cats.length===1){catLabel=cats[0];cntHtml='<span class="cnt">'+total[pg[0].cat]+' מבצעים</span>';}
-        else{catLabel=cats.join(" ← ");}
-        var brand='<div class="pp-brand"><div class="lg"><img src="'+logo+'" onerror="this.style.display=\'none\'"><span>מעיין נציגויות</span></div><div class="tt">'+title+'</div>'+(validShort?'<div class="vv">🗓️ '+validShort+'</div>':'')+'</div>';
-        var catban='<div class="pp-cat"><h2>'+catLabel+'</h2>'+cntHtml+'</div>';
-        var cards=pg.map(function(x){return staticCardHTML(x.it,x.col,{imgMap:opts.imgMap});}).join("");
-        var foot='<div class="pp-foot"><img src="'+logo+'" onerror="this.style.display=\'none\'"><div class="c">📲 להזמנות בוואטסאפ</div><div class="s">מעיין נציגויות'+(validShort?' · '+validShort:'')+'</div></div>';
-        pagesHtml+='<div class="pp-page'+(partial?' partial':'')+'">'+brand+catban+'<div class="pp-body"><div class="pp-grid">'+cards+'</div></div>'+foot+'</div>';
-    }
+    var brand='<div class="pp-brand"><div class="lg"><img src="'+logo+'" onerror="this.style.display=\'none\'"><span>מעיין נציגויות</span></div><div class="tt">'+title+'</div>'+(validShort?'<div class="vv">🗓️ '+validShort+'</div>':'')+'</div>';
+    var foot='<div class="pp-foot"><img src="'+logo+'" onerror="this.style.display=\'none\'"><div class="c">📲 להזמנות בוואטסאפ</div><div class="s">מעיין נציגויות'+(validShort?' · '+validShort:'')+'</div></div>';
+    // כל קטגוריה מתחילה בעמוד חדש — באנר קטגוריה נקי בכל עמוד, בלי ערבוב
+    sections.forEach(function(s){
+        var catban='<div class="pp-cat"><h2>'+_enc(s.cat)+'</h2><span class="cnt">'+s.items.length+' מבצעים</span></div>';
+        for(var i=0;i<s.items.length;i+=PER){
+            var chunk=s.items.slice(i,i+PER), partial=chunk.length<PER;
+            var cards=chunk.map(function(it){return staticCardHTML(it,s.col,{imgMap:opts.imgMap});}).join("");
+            pagesHtml+='<div class="pp-page'+(partial?' partial':'')+'">'+brand+catban+'<div class="pp-body"><div class="pp-grid">'+cards+'</div></div>'+foot+'</div>';
+        }
+    });
     return pagesHtml;
 }
 /* ── בחירת פריטים להדפסה ── */
@@ -576,8 +572,7 @@ function doPrint(){
     setTimeout(function(){window.print();},40);
 }
 window.addEventListener("beforeprint",function(){
-    var r=document.getElementById("printRoot");
-    if(r&&allItems.length&&!r.innerHTML.trim()) rebuildPrintRoot();
+    if(allItems.length) rebuildPrintRoot();  // תמיד בנה מחדש לפי הנתונים/בחירה העדכניים
 });
 
 /* ── BUILD CARD (מרובע, תמונה למעלה) ── */
