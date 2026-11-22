@@ -64,6 +64,23 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
     padding:2px 8px; font-size:10px; font-weight:800; max-width:58%; text-align:center; line-height:1.15;
     box-shadow:0 1px 4px rgba(0,0,0,.08); }
 
+/* בחירת פריטים להדפסה — צ'קבוקס עגול למעלה-מרכז */
+.pcheck { position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:4;
+    width:28px; height:28px; border-radius:50%; border:2px solid #b9d9ee; background:rgba(255,255,255,.95);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:900; color:#52a8dc;
+    box-shadow:0 1px 6px rgba(0,0,0,.15); transition:background .12s,border-color .12s; }
+.pcheck:hover { border-color:#52a8dc; background:#fff; }
+.card.psel { outline:3px solid #52a8dc; outline-offset:-2px; }
+.card.psel .pcheck { background:#52a8dc; color:#fff; border-color:#52a8dc; }
+/* פס "נבחרו להדפסה" צף */
+#selBar { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:600;
+    background:#1c2e54; color:#fff; border-radius:99px; padding:9px 12px 9px 18px; display:none; align-items:center; gap:12px;
+    box-shadow:0 6px 22px rgba(28,46,84,.42); font-size:14px; font-weight:800; font-family:Heebo,sans-serif; }
+#selBar.show { display:flex; }
+#selBar button { border:none; border-radius:99px; padding:8px 15px; font-weight:800; cursor:pointer; font-family:Heebo,sans-serif; font-size:13px; }
+#selBar .sb-print { background:#52a8dc; color:#fff; }
+#selBar .sb-clear { background:rgba(255,255,255,.18); color:#fff; }
+
 /* גוף */
 .card-body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
 .card-name { font-size:14.5px; font-weight:800; color:#1c2e54; line-height:1.3; min-height:2.5em;
@@ -270,6 +287,13 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
   </div>
 </div>
 
+<!-- פס בחירה להדפסה -->
+<div id="selBar">
+  <span>✓ נבחרו <b id="selCnt">0</b> — יודפסו רק הם</span>
+  <button class="sb-print" onclick="doPrint()">🖨️ הדפס נבחרים</button>
+  <button class="sb-clear" onclick="clearPsel()">נקה</button>
+</div>
+
 <!-- Color Popup -->
 <div id="cpopup"><div class="cpopup-grid" id="cpopupGrid"></div></div>
 
@@ -359,6 +383,7 @@ var IMGF="./images/", IMGE=".jpg";
 var BRAND_LOGO="logo.png"; // לוגו המותג — קובץ ליד ה-HTML (או data URI מוטמע)
 var WA=""; // ריק = בוחרים נמען בוואטסאפ בכל שליחה. למספר קבוע: שים "9725XXXXXXXX"
 var imgCache={}, allItems=[], catOrder=[], catColors={}, cart={}, custOrder=[], sortDragEl=null, activeCpId=null;
+var printSel={}; // פריטים שנבחרו להדפסה (ריק = מדפיסים הכל)
 
 var DEFAULT_ORDER=["גלידות","פררו - קינדר","מסטיקים | סוכריות | לקקנים","שוקולדים קו קופות","שוקולדים טבלאות | בונבונירות","עוגיות  | עוגות | וופלים | עוגות אישיות","חטיפים מלוחים | פיצוחים | מוצרי אירוח","חטיפי אנרגיה | דגני בוקר | מוצרי בריאות","מוצרי חלבון","מוצרים ארה\"ב","מסטיקים | סוכריות | לקקנים","שתייה קלה | טרופיות | חטיפי קרח","משקאות אנרגיה | בירות | יין | אלכוהול","רטבים | ממרחים | יבשים | אפיה | שמנים","מוצרים למשקל | לקריצים | גומי תפזורת | טופי","צעצועים | ממתקים","שתיה חמה | קפה | תה"];
 
@@ -520,9 +545,29 @@ function buildPrintPagesHTML(opts){
     }
     return pagesHtml;
 }
+/* ── בחירת פריטים להדפסה ── */
+function togglePsel(id,cardEl){
+    if(printSel[id])delete printSel[id]; else printSel[id]=true;
+    if(cardEl){cardEl.classList.toggle("psel",!!printSel[id]);var pc=cardEl.querySelector(".pcheck");if(pc)pc.textContent=printSel[id]?"✓":"";}
+    updSelBar();
+}
+function updSelBar(){
+    var n=Object.keys(printSel).length;
+    var bar=document.getElementById("selBar"); if(bar)bar.classList.toggle("show",n>0);
+    var t=document.getElementById("selCnt"); if(t)t.textContent=n;
+}
+function clearPsel(){
+    printSel={};
+    document.querySelectorAll(".card.psel").forEach(function(c){c.classList.remove("psel");var pc=c.querySelector(".pcheck");if(pc)pc.textContent="";});
+    updSelBar();
+}
+function selectedForPrint(){
+    var sel=allItems.filter(function(it){return printSel[it.id];});
+    return sel.length?sel:allItems;
+}
 function rebuildPrintRoot(){
     var root=document.getElementById("printRoot"); if(!root)return;
-    root.innerHTML=buildPrintPagesHTML({items:allItems});
+    root.innerHTML=buildPrintPagesHTML({items:selectedForPrint()});
 }
 function doPrint(){
     if(!allItems.length){window.print();return;}
@@ -559,6 +604,11 @@ function buildCard(item){
     if(t){var st=mk("div");st.className="deal-stamp";st.innerHTML='<div class="b">'+pctStr(t.pct)+'%</div><div class="l">מבצע</div>';imgD.appendChild(st);}
     /* תג כשרות (ירוק, פינה) */
     if(item.kosher&&String(item.kosher).trim()){var kb=mk("div");kb.className="kbadge";kb.textContent="✡ "+String(item.kosher).trim();imgD.appendChild(kb);}
+    /* צ'קבוקס בחירה להדפסה */
+    var pc=mk("div"); pc.className="pcheck np"; pc.title="בחר להדפסה";
+    if(printSel[item.id]){card.classList.add("psel");pc.textContent="✓";}
+    (function(id,cardEl){pc.onclick=function(e){e.stopPropagation();togglePsel(id,cardEl);};})(item.id,card);
+    imgD.appendChild(pc);
     /* priority */
     var pri=priNorm(item.priority);
     if(pri==="sun"||pri==="star"){var bp=mk("div");bp.className="badge-pri";bp.textContent=pri==="sun"?"☀️":"⭐";imgD.appendChild(bp);}
