@@ -413,15 +413,20 @@ function normalizeCat(raw){
 
 /* ── עזרי HTML משותפים (כרטיס חי + ייצוא סטטי) ── */
 function pctStr(p){return p===Math.round(p)?String(Math.round(p)):String(p);}
-function dealTop(deal){ // מחזיר {qty,pct} של המדרגה עם אחוז מקסימלי
-    var s=String(deal||""),best=null;
-    s.split(",").forEach(function(part){
-        var pm=part.match(/(\d+(?:\.\d+)?)\s*%/); if(!pm)return;
-        var pct=parseFloat(pm[1]);
-        var nums=(part.match(/\d+(?:\.\d+)?/g)||[]).map(parseFloat).filter(function(n){return n!==pct;});
-        var qty=nums.length?Math.round(nums[0]):1;
-        if(!best||pct>best.pct)best={qty:qty,pct:pct};
-    });
+/* פירוק מדרגות מבצע — עמיד לפסיקים, רווחים, או שילוב ("6=15%, 24=35%" / "6=15% 24=35%") */
+function parseTiers(deal){
+    var s=String(deal||""), tiers=[], m;
+    var re=/(\d+(?:\.\d+)?)\s*=\s*(\d+(?:\.\d+)?)\s*%/g;      // "qty=pct%"
+    while((m=re.exec(s))){ tiers.push({qty:Math.round(parseFloat(m[1])), pct:parseFloat(m[2])}); }
+    if(!tiers.length){                                        // אחוז בודד בלי כמות ("30%")
+        var re2=/(\d+(?:\.\d+)?)\s*%/g;
+        while((m=re2.exec(s))){ tiers.push({qty:1, pct:parseFloat(m[1])}); }
+    }
+    return tiers;
+}
+function dealTop(deal){ // המדרגה עם אחוז ההנחה הגבוה ביותר (מקור אחיד לתווית ולמחיר)
+    var tiers=parseTiers(deal), best=null;
+    tiers.forEach(function(t){ if(!best||t.pct>best.pct) best=t; });
     return best;
 }
 function buyGet(deal){var t=dealTop(deal);if(!t)return"";return t.qty>1?("קנה "+t.qty+" קבל "+pctStr(t.pct)+"%"):(pctStr(t.pct)+"% הנחה");}
@@ -450,11 +455,11 @@ function kosherBadgeHTML(item){
 }
 function priceHTML(item,price){
     if(!(price>0)) return '<div class="priceinfo"></div>';
-    var deal=item.deal&&String(item.deal).trim()?String(item.deal).trim():'';
-    var maxD=0;(deal.match(/(\d+(?:\.\d+)?)\s*%/g)||[]).forEach(function(m){var pp=parseFloat(m)||0;if(pp>maxD)maxD=pp;});
-    var net=maxD>0?price*(1-maxD/100):price;
+    var t=dealTop(item.deal);               // אותה מדרגה כמו התווית → נטו עקבי עם "קנה X קבל Y%"
+    var pct=t?t.pct:0;
+    var net=pct>0?price*(1-pct/100):price;
     var h='<div class="priceinfo"><div class="pnet"><span class="pnet-label">נטו</span><span class="pnet-val">₪'+net.toFixed(2)+'</span></div>';
-    if(maxD>0) h+='<span class="pstrike">₪'+price.toFixed(2)+'</span>';
+    if(pct>0) h+='<span class="pstrike">₪'+price.toFixed(2)+'</span>';
     return h+'</div>';
 }
 
