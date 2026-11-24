@@ -80,6 +80,48 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 #selBar button { border:none; border-radius:99px; padding:8px 15px; font-weight:800; cursor:pointer; font-family:Heebo,sans-serif; font-size:13px; }
 #selBar .sb-print { background:#52a8dc; color:#fff; }
 #selBar .sb-clear { background:rgba(255,255,255,.18); color:#fff; }
+#selBar .sb-kit { background:#f59e0b; color:#1c2e54; }
+
+/* ===== ערכות מכירה ===== */
+.kmodal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1100; align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto; }
+.kmodal.open { display:flex; }
+.kbox { background:#eef3f7; border-radius:20px; width:860px; max-width:96vw; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,.3); overflow:hidden; }
+.kbox-hdr { background:#fff; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #52a8dc; }
+.kbox-hdr h2 { font-size:18px; font-weight:900; color:#1c2e54; }
+.kbox-body { padding:16px 18px; display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:14px; }
+.kempty { grid-column:1/-1; text-align:center; color:#94a3b8; padding:30px; font-size:15px; }
+/* כרטיס ערכה */
+.kcard { background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 3px 14px rgba(15,23,42,.1); border:1px solid #cfe8f6; display:flex; flex-direction:column; }
+.kcard-h { background:linear-gradient(135deg,#52a8dc,#1c2e54); color:#fff; padding:13px 16px; position:relative; }
+.kcard-h .rb { position:absolute; top:11px; inset-inline-end:14px; background:#f59e0b; color:#1c2e54; font-weight:900; font-size:10.5px; padding:3px 10px; border-radius:99px; }
+.kcard-h h3 { margin:0; font-size:18px; font-weight:900; } .kcard-h .cnt { font-size:11.5px; opacity:.9; margin-top:2px; }
+.klist { padding:6px 14px 0; max-height:190px; overflow-y:auto; }
+.klist table { width:100%; border-collapse:collapse; font-size:12px; }
+.klist td { padding:5px 2px; border-bottom:1px solid #f1f5f9; }
+.klist .kn { font-weight:700; color:#1c2e54; } .klist .kq { color:#f59e0b; font-weight:800; width:38px; text-align:center; } .klist .kl { font-weight:800; width:62px; text-align:left; }
+.kpr { margin:8px 14px 0; background:#eaf6fc; border:1px solid #cfe8f6; border-radius:12px; padding:11px 14px; }
+.kpr .r { display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }
+.kpr .r .l { color:#5d7686; font-weight:600; } .kpr .r .v { font-weight:800; }
+.kpr .r.d .v { color:#f59e0b; } .kpr .was { color:#b9c6d1; text-decoration:line-through; }
+.kpr .r.net { border-top:2px dashed #cfe8f6; padding-top:8px; margin-top:3px; } .kpr .r.net .l { font-size:15px; font-weight:900; color:#1c2e54; } .kpr .r.net .v { font-size:22px; font-weight:900; color:#1c2e54; }
+.kpr .sv { text-align:center; background:#16a34a; color:#fff; border-radius:9px; padding:5px; font-weight:800; font-size:12px; margin-top:7px; }
+.kact { padding:12px 14px 14px; display:flex; gap:8px; flex-wrap:wrap; }
+.kact button { flex:1; border:none; border-radius:10px; padding:11px; font-size:13px; font-weight:800; font-family:Heebo,sans-serif; cursor:pointer; min-width:90px; }
+.kact .ko { background:#25d366; color:#fff; } .kact .ke { background:#eaf6fc; color:#1c2e54; border:1.5px solid #cfe8f6!important; flex:0 0 auto; } .kact .kd { background:#fef2f2; color:#dc2626; flex:0 0 auto; }
+/* עורך ערכה */
+.ked-row { display:flex; align-items:center; gap:10px; background:#f8fafc; border:1px solid #eef2f7; border-radius:10px; padding:8px 10px; margin-bottom:7px; }
+.ked-row .en { flex:1; min-width:0; font-size:12.5px; font-weight:700; color:#1e293b; } .ked-row .ep { font-size:11px; color:#94a3b8; width:56px; text-align:left; }
+.ked-ctr { display:inline-flex; align-items:center; border:1.5px solid #cfe8f6; border-radius:9px; overflow:hidden; }
+.ked-ctr button { width:28px; height:28px; border:0; background:#eaf6fc; color:#1c2e54; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit; }
+.ked-ctr input { width:42px; height:28px; border:0; border-inline:1px solid #cfe8f6; text-align:center; font-size:13px; font-weight:800; font-family:inherit; outline:none; -moz-appearance:textfield; }
+.ked-ctr input::-webkit-outer-spin-button,.ked-ctr input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ked-del { width:28px; height:28px; border:0; background:#fef2f2; color:#dc2626; border-radius:7px; cursor:pointer; }
+.ked-fields { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin:4px 0 12px; }
+.ked-fields label { font-size:12px; font-weight:700; color:#5d7686; display:flex; flex-direction:column; gap:4px; }
+.ked-fields input { border:2px solid #e2e8f0; border-radius:9px; padding:7px 10px; font-size:13px; font-family:inherit; outline:none; }
+.ked-fields input:focus { border-color:#52a8dc; }
+.ked-sum { background:#eaf6fc; border:1px solid #cfe8f6; border-radius:12px; padding:12px 14px; font-size:14px; font-weight:800; color:#1c2e54; display:flex; justify-content:space-between; align-items:center; }
+.ked-sum .big { font-size:22px; font-weight:900; } .ked-sum .sv { color:#16a34a; font-size:13px; }
 
 /* גוף */
 .card-body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
@@ -289,9 +331,49 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
 
 <!-- פס בחירה להדפסה -->
 <div id="selBar">
-  <span>✓ נבחרו <b id="selCnt">0</b> — יודפסו רק הם</span>
+  <span>✓ נבחרו <b id="selCnt">0</b></span>
   <button class="sb-print" onclick="doPrint()">🖨️ הדפס נבחרים</button>
+  <button class="sb-kit" onclick="buildKitFromSel()">🧰 בנה ערכה</button>
   <button class="sb-clear" onclick="clearPsel()">נקה</button>
+</div>
+
+<!-- ערכות מכירה — רשימה -->
+<div id="kitsModal" class="kmodal">
+  <div class="kbox">
+    <div class="kbox-hdr">
+      <h2>🧰 ערכות מכירה</h2>
+      <button onclick="document.getElementById('kitsModal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>
+    </div>
+    <div class="kbox-body" id="kitsBody"></div>
+  </div>
+</div>
+
+<!-- עורך ערכה -->
+<div id="kitEditModal" class="kmodal">
+  <div class="kbox" style="width:560px;">
+    <div class="kbox-hdr"><h2 id="kedTitle">🧰 ערכה חדשה</h2>
+      <button onclick="document.getElementById('kitEditModal').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>
+    </div>
+    <div style="padding:16px 18px;">
+      <div class="ked-fields">
+        <label style="flex:1;">שם הערכה
+          <input type="text" id="kedName" placeholder="למשל: ערכת גומי" style="width:100%;">
+        </label>
+        <label>הנחת ערכה %
+          <input type="number" id="kedDisc" min="0" max="100" step="0.1" style="width:90px;" oninput="kedRecalc()">
+        </label>
+      </div>
+      <div id="kedItems" style="max-height:44vh;overflow-y:auto;"></div>
+      <div class="ked-sum" style="margin-top:12px;">
+        <div>מחירון <span class="was" id="kedGross" style="color:#b9c6d1;text-decoration:line-through;"></span> · <span class="sv" id="kedSave"></span></div>
+        <div>סכום העסקה <span class="big" id="kedNet"></span></div>
+      </div>
+      <div style="display:flex;gap:9px;justify-content:space-between;margin-top:14px;">
+        <button onclick="document.getElementById('kitEditModal').classList.remove('open')" style="padding:9px 16px;border-radius:99px;border:2px solid #e2e8f0;font-weight:700;font-size:13px;cursor:pointer;color:#64748b;background:#fff;font-family:inherit;">ביטול</button>
+        <button onclick="saveKit()" style="padding:9px 22px;border-radius:99px;background:#16a34a;color:#fff;font-weight:800;font-size:14px;cursor:pointer;border:none;font-family:inherit;">✓ שמור ערכה</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Color Popup -->
@@ -361,6 +443,7 @@ body { font-family:'Heebo',sans-serif; background:#f0f4f8; }
     <input type="file" id="logoIn" accept="image/*" class="hidden" onchange="loadLogo(event)">
     <button onclick="document.getElementById('sortModal').classList.add('open');renderSortList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-full shadow">⇅ סדר קטגוריות</button>
     <button onclick="openItemSort()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-5 rounded-full shadow">⇄ סדר פריטים</button>
+    <button onclick="openKits()" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-5 rounded-full shadow">🧰 ערכות <span id="kitsCnt" style="background:white;color:#d97706;border-radius:99px;font-size:11px;font-weight:900;padding:1px 7px;">0</span></button>
     <button onclick="exportStatic()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-5 rounded-full shadow">📤 ייצא קובץ מוכן</button>
     <span id="fSt" class="text-sm text-gray-400"></span>
   </div>
@@ -383,7 +466,9 @@ var IMGF="./images/", IMGE=".jpg";
 var BRAND_LOGO="logo.png"; // לוגו המותג — קובץ ליד ה-HTML (או data URI מוטמע)
 var WA=""; // ריק = בוחרים נמען בוואטסאפ בכל שליחה. למספר קבוע: שים "9725XXXXXXXX"
 var imgCache={}, allItems=[], catOrder=[], catColors={}, cart={}, custOrder=[], sortDragEl=null, activeCpId=null;
-var printSel={}; // פריטים שנבחרו להדפסה (ריק = מדפיסים הכל)
+var printSel={}; // פריטים שנבחרו (הדפסה / בניית ערכה)
+var kits=[];      // ערכות מכירה: [{id,name,disc,items:[{id,qty}]}]
+var editingKitId=null;
 
 var DEFAULT_ORDER=["גלידות","פררו - קינדר","מסטיקים | סוכריות | לקקנים","שוקולדים קו קופות","שוקולדים טבלאות | בונבונירות","עוגיות  | עוגות | וופלים | עוגות אישיות","חטיפים מלוחים | פיצוחים | מוצרי אירוח","חטיפי אנרגיה | דגני בוקר | מוצרי בריאות","מוצרי חלבון","מוצרים ארה\"ב","מסטיקים | סוכריות | לקקנים","שתייה קלה | טרופיות | חטיפי קרח","משקאות אנרגיה | בירות | יין | אלכוהול","רטבים | ממרחים | יבשים | אפיה | שמנים","מוצרים למשקל | לקריצים | גומי תפזורת | טופי","צעצועים | ממתקים","שתיה חמה | קפה | תה"];
 
@@ -579,6 +664,108 @@ function doPrint(){
 window.addEventListener("beforeprint",function(){
     if(allItems.length) rebuildPrintRoot();  // תמיד בנה מחדש לפי הנתונים/בחירה העדכניים
 });
+
+/* ===== ערכות מכירה ===== */
+var kedItems=[]; // פריטי הערכה בעריכה: [{id,qty}]
+function itemById(id){for(var i=0;i<allItems.length;i++){if(allItems[i].id===id)return allItems[i];}return null;}
+function priceOf(it){return parseFloat(String((it&&it.price)||"0").replace(/,/g,""))||0;}
+function maxDiscOf(items){var m=0;items.forEach(function(it){var t=dealTop(it&&it.deal);if(t&&t.pct>m)m=t.pct;});return m;}
+function updKitsCnt(){var e=document.getElementById("kitsCnt");if(e)e.textContent=kits.length;}
+function saveKitsLS(){try{localStorage.setItem("promoKits",JSON.stringify(kits));}catch(e){}}
+function loadKitsLS(){try{var s=localStorage.getItem("promoKits");if(s)kits=JSON.parse(s)||[];}catch(e){kits=[];}}
+function kitTotals(kit){var g=0;kit.items.forEach(function(x){var it=itemById(x.id);if(it)g+=priceOf(it)*(parseInt(x.qty)||0);});var net=g*(1-(parseFloat(kit.disc)||0)/100);return {gross:g,net:net,save:g-net};}
+
+function buildKitFromSel(){
+    var ids=Object.keys(printSel);
+    if(!ids.length){alert("סמן קודם מוצרים (✓) בקטלוג לבניית ערכה");return;}
+    editingKitId=null;
+    kedItems=ids.map(function(id){return {id:id,qty:1};});
+    var its=kedItems.map(function(x){return itemById(x.id);}).filter(Boolean);
+    document.getElementById("kedName").value="";
+    document.getElementById("kedDisc").value=pctStr(maxDiscOf(its));
+    document.getElementById("kedTitle").textContent="🧰 ערכה חדשה";
+    renderKedItems(); kedRecalc();
+    document.getElementById("kitEditModal").classList.add("open");
+}
+function renderKedItems(){
+    var wrap=document.getElementById("kedItems"); wrap.innerHTML="";
+    if(!kedItems.length){wrap.innerHTML='<div style="text-align:center;color:#94a3b8;padding:16px;">אין פריטים בערכה</div>';return;}
+    kedItems.forEach(function(x,i){
+        var it=itemById(x.id); if(!it)return;
+        var row=mk("div"); row.className="ked-row";
+        var nm=mk("div"); nm.className="en"; nm.textContent=it.name; row.appendChild(nm);
+        var pp=mk("div"); pp.className="ep"; pp.textContent="₪"+priceOf(it).toFixed(2); row.appendChild(pp);
+        var ctr=mk("div"); ctr.className="ked-ctr";
+        var mn=mk("button"); mn.textContent="−"; mn.onclick=function(){x.qty=Math.max(1,(parseInt(x.qty)||1)-1);renderKedItems();kedRecalc();};
+        var qi=mk("input"); qi.type="number"; qi.min="1"; qi.value=x.qty; qi.oninput=function(){x.qty=Math.max(1,parseInt(this.value)||1);kedRecalc();};
+        var pl=mk("button"); pl.textContent="+"; pl.onclick=function(){x.qty=(parseInt(x.qty)||1)+1;renderKedItems();kedRecalc();};
+        ctr.appendChild(mn);ctr.appendChild(qi);ctr.appendChild(pl); row.appendChild(ctr);
+        var del=mk("button"); del.className="ked-del"; del.textContent="🗑"; (function(idx){del.onclick=function(){kedItems.splice(idx,1);renderKedItems();kedRecalc();};})(i);
+        row.appendChild(del); wrap.appendChild(row);
+    });
+}
+function kedRecalc(){
+    var disc=parseFloat(document.getElementById("kedDisc").value)||0;
+    var gross=0; kedItems.forEach(function(x){var it=itemById(x.id);if(it)gross+=priceOf(it)*(parseInt(x.qty)||0);});
+    var net=gross*(1-disc/100), save=gross-net;
+    document.getElementById("kedGross").textContent="₪"+gross.toFixed(0);
+    document.getElementById("kedNet").textContent="₪"+net.toFixed(0);
+    document.getElementById("kedSave").textContent="חיסכון ₪"+save.toFixed(0);
+}
+function saveKit(){
+    var name=document.getElementById("kedName").value.trim()||"ערכה";
+    var disc=parseFloat(document.getElementById("kedDisc").value)||0;
+    var items=kedItems.filter(function(x){return (parseInt(x.qty)||0)>0;}).map(function(x){return {id:x.id,qty:parseInt(x.qty)||1};});
+    if(!items.length){alert("אין פריטים בערכה");return;}
+    if(editingKitId){var k=null;kits.forEach(function(z){if(z.id===editingKitId)k=z;});if(k){k.name=name;k.disc=disc;k.items=items;}}
+    else{kits.push({id:"k"+Date.now(),name:name,disc:disc,items:items});}
+    saveKitsLS(); updKitsCnt();
+    document.getElementById("kitEditModal").classList.remove("open");
+    clearPsel(); openKits();
+}
+function openKits(){ renderKits(); document.getElementById("kitsModal").classList.add("open"); }
+function renderKits(){
+    var body=document.getElementById("kitsBody"); if(!body)return; body.innerHTML="";
+    if(!kits.length){body.innerHTML='<div class="kempty">עדיין אין ערכות.<br>סמן מוצרים בקטלוג (✓) ולחץ "🧰 בנה ערכה".</div>';return;}
+    kits.forEach(function(k){
+        var t=kitTotals(k);
+        var rows=k.items.map(function(x){var it=itemById(x.id);if(!it)return"";return '<tr><td class="kn">'+_enc(it.name)+'</td><td class="kq">×'+x.qty+'</td><td class="kl">₪'+(priceOf(it)*x.qty).toFixed(0)+'</td></tr>';}).join("");
+        var card=mk("div"); card.className="kcard";
+        card.innerHTML='<div class="kcard-h"><span class="rb">הנחה '+pctStr(k.disc)+'%</span><h3>🧰 '+_enc(k.name)+'</h3><div class="cnt">'+k.items.length+' מוצרים</div></div>'+
+          '<div class="klist"><table>'+rows+'</table></div>'+
+          '<div class="kpr"><div class="r"><span class="l">מחיר מחירון</span><span class="v was">₪'+t.gross.toFixed(0)+'</span></div>'+
+          '<div class="r d"><span class="l">הנחת ערכה</span><span class="v">−'+pctStr(k.disc)+'%</span></div>'+
+          '<div class="r net"><span class="l">סכום העסקה</span><span class="v">₪'+t.net.toFixed(0)+'</span></div>'+
+          '<div class="sv">💰 חיסכון ₪'+t.save.toFixed(0)+'</div></div>'+
+          '<div class="kact"><button class="ko" onclick="orderKitWA(\''+k.id+'\')">📲 הזמן ערכה</button><button class="ke" onclick="editKit(\''+k.id+'\')">✏️</button><button class="kd" onclick="deleteKit(\''+k.id+'\')">🗑</button></div>';
+        body.appendChild(card);
+    });
+}
+function editKit(id){
+    var k=null; kits.forEach(function(z){if(z.id===id)k=z;}); if(!k)return;
+    editingKitId=id;
+    kedItems=k.items.map(function(x){return {id:x.id,qty:x.qty};});
+    document.getElementById("kedName").value=k.name;
+    document.getElementById("kedDisc").value=k.disc;
+    document.getElementById("kedTitle").textContent="🧰 עריכת ערכה";
+    renderKedItems(); kedRecalc();
+    document.getElementById("kitsModal").classList.remove("open");
+    document.getElementById("kitEditModal").classList.add("open");
+}
+function deleteKit(id){
+    if(!confirm("למחוק את הערכה?"))return;
+    kits=kits.filter(function(z){return z.id!==id;});
+    saveKitsLS(); updKitsCnt(); renderKits();
+}
+function orderKitWA(id){
+    var k=null; kits.forEach(function(z){if(z.id===id)k=z;}); if(!k)return;
+    var t=kitTotals(k);
+    var msg="🧰 *הזמנת ערכה: "+k.name+"*\n────────\n";
+    k.items.forEach(function(x,i){var it=itemById(x.id);if(!it)return;msg+=(i+1)+". "+it.name+"\n   מק\"ט "+x.id+" · כמות "+x.qty+"\n";});
+    msg+="────────\nמחירון: ₪"+t.gross.toFixed(0)+"\nהנחת ערכה: "+pctStr(k.disc)+"%\n*סכום לתשלום: ₪"+t.net.toFixed(0)+"*  (חיסכון ₪"+t.save.toFixed(0)+")";
+    var base=(WA&&WA.trim())?("https://wa.me/"+WA.trim()+"?text="):"https://wa.me/?text=";
+    window.open(base+encodeURIComponent(msg),"_blank");
+}
 
 /* ── BUILD CARD (מרובע, תמונה למעלה) ── */
 function buildCard(item){
@@ -1212,6 +1399,7 @@ window.onload=function(){
     Object.keys(DEFAULT_COLORS).forEach(function(k){if(!catColors[k])catColors[k]=DEFAULT_COLORS[k];});
     try{var sc=localStorage.getItem("promoCategoryColors");if(sc){var pc=JSON.parse(sc);Object.keys(pc).forEach(function(k){catColors[k]=pc[k];});}}catch(e){}
     try{var lg=localStorage.getItem("promoLogo");if(lg){BRAND_LOGO=lg;var h=document.querySelector(".logo-img");if(h)h.src=lg;}}catch(e){}
+    loadKitsLS(); updKitsCnt();
     initHeaderEdit();
     document.getElementById("noEl").style.display="block";
 };
