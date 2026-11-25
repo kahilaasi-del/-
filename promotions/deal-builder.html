@@ -76,6 +76,11 @@ details.internal summary{font-size:12px;font-weight:800;color:#64748b;cursor:poi
 details.internal summary::-webkit-details-marker{display:none}
 details.internal[open] summary{margin-bottom:8px}
 details.internal .row{font-size:12.5px;margin-bottom:6px}
+.catbox{background:#f8fafc;border:1px solid #eef2f7;border-radius:10px;padding:9px 11px;margin:9px 0}
+.catbox-t{font-size:12px;font-weight:800;color:#5d7686;margin-bottom:6px}
+.catrow{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px}
+.catrow .l{color:#5d7686;font-weight:600}.catrow .l small{color:#94a3b8;font-weight:500}
+.catrow .v.ok{color:#16a34a;font-weight:800}.catrow .v.bad{color:#dc2626;font-weight:800}
 /* config modal */
 .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:16px}
 .modal.open{display:flex}
@@ -129,8 +134,7 @@ details.internal .row{font-size:12.5px;margin-bottom:6px}
     <div class="cfg-row"><label>מדרגה 3</label><span style="display:flex;gap:6px"><input type="number" id="cT3" value="15000" style="width:100px"><input type="number" id="cD3" value="20" style="width:62px" title="% הנחה"></span></div>
     <div style="font-size:11px;color:#94a3b8;text-align:center;margin:-4px 0 10px">₪ סכום · % הנחה</div>
     <div class="sep" style="margin:6px 0 12px"></div>
-    <div class="cfg-row"><label>מינימום פריטים בעסקה</label><input type="number" id="cMin" value="10"></div>
-    <div class="cfg-row"><label>מקסימום פריטים בעסקה</label><input type="number" id="cMax" value="30"></div>
+    <div class="cfg-row"><label>מינימום פריטים בעסקה</label><input type="number" id="cMin" value="30"></div>
     <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:8px">
       <button class="btn btn-ghost" onclick="document.getElementById('cfgModal').classList.remove('open')">ביטול</button>
       <button class="btn btn-load" onclick="saveCfg()">✓ שמור</button>
@@ -140,9 +144,18 @@ details.internal .row{font-size:12.5px;margin-bottom:6px}
 
 <script>
 var allItems=[], order={}, gift={}, tab="deal", imgCache={};
-var CFG={t:[5000,10000,15000], tierDisc:[10,15,20], min:10, max:30};
+var catShares={}, manualDisc=null;   // חלק יחסי של כל קטגוריה · הנחה ידנית (null = ברירת מחדל ממדרגה)
+var CFG={t:[5000,10000,15000], tierDisc:[10,15,20], min:30};
 try{var s=localStorage.getItem("dealCfg");if(s)CFG=Object.assign(CFG,JSON.parse(s));}catch(e){}
 if(!CFG.tierDisc||CFG.tierDisc.length<3)CFG.tierDisc=[10,15,20];
+if(!CFG.min)CFG.min=30;
+
+/* איחוד קטגוריות: מעיין יבוא* → מעיין יבוא · שקל → מוצרים לשקל · השאר → קידום מוצרים */
+function normalizeCat(raw){var c=String(raw==null?"":raw).trim();if(/^מעיין\s*יבוא/.test(c))return "מעיין יבוא";if(/שקל/.test(c))return "מוצרים לשקל";return "קידום מוצרים";}
+function computeShares(){
+  var c={},tot=0; allItems.forEach(function(i){var k=normalizeCat(i.cat);c[k]=(c[k]||0)+1;tot++;});
+  catShares={}; if(tot) Object.keys(c).forEach(function(k){catShares[k]=c[k]/tot;});
+}
 var WA=""; // מספר וואטסאפ קבוע (ריק = בוחרים נמען)
 
 function mk(t){return document.createElement(t);}
@@ -182,7 +195,7 @@ function loadXLS(ev){
         });
       });
       st.textContent="✅ "+allItems.length+" מוצרים"; setTimeout(function(){st.textContent="";},4000);
-      renderGrid(); renderPanel();
+      computeShares(); renderGrid(); renderPanel();
     }catch(err){st.textContent="❌ שגיאה";console.error(err);}
   };
   rd.readAsArrayBuffer(f); ev.target.value="";
@@ -224,20 +237,32 @@ function itemById(id){for(var i=0;i<allItems.length;i++)if(allItems[i].id===id)r
 
 /* ---- deal computation ---- */
 function computeDeal(){
-  var total=0, budget=0, items=0;
-  Object.keys(order).forEach(function(id){
+  var total=0, budget=0, catCount={};
+  var ids=Object.keys(order);
+  ids.forEach(function(id){
     var it=itemById(id); if(!it)return; var q=order[id]; var p=priceOf(it);
-    total+=p*q; budget+=p*q*discPct(it.deal)/100; items++;
+    total+=p*q; budget+=p*q*discPct(it.deal)/100;
+    var k=normalizeCat(it.cat); catCount[k]=(catCount[k]||0)+1;
   });
+  var items=ids.length;
   var tier=0; for(var i=0;i<CFG.t.length;i++){ if(total>=CFG.t[i]) tier=i+1; }
-  var custPct = tier>0 ? (parseFloat(CFG.tierDisc[tier-1])||0) : 0;  // ההנחה שהלקוח מקבל (קבועה למדרגה)
+  var tierPct = tier>0 ? (parseFloat(CFG.tierDisc[tier-1])||0) : 0;    // ברירת מחדל ממדרגת הסכום
+  var custPct = (manualDisc!=null) ? manualDisc : tierPct;             // הסוכן מחליט (או ברירת מחדל)
   var discountValue = total*custPct/100;                              // שווי ההנחה בש״ח
-  var giftBudget = Math.max(0, budget - discountValue);              // היתרה מהתקציב → מתנה
-  var over = discountValue > budget + 0.5;                           // ההנחה חורגת מהתקציב (פנימי)
+  var giftBudget = Math.max(0, budget - discountValue);              // יתרת התקציב → מתנה
+  var over = discountValue > budget + 0.5;
   var net = total - discountValue;
   var giftUsed=0;
   Object.keys(gift).forEach(function(id){var it=itemById(id);if(it)giftUsed+=priceOf(it)*gift[id];});
-  return {total:total,budget:budget,custPct:custPct,discountValue:discountValue,giftBudget:giftBudget,over:over,net:net,items:items,giftUsed:giftUsed,tier:tier};
+  // דרישת מינימום לכל קטגוריה לפי חלקה היחסי (מתוך מינ' CFG.min או גודל העסקה בפועל)
+  var base=Math.max(CFG.min, items), catReq={}, catOk=true;
+  Object.keys(catShares).forEach(function(k){
+    catReq[k]=Math.round(catShares[k]*base);
+    if((catCount[k]||0)<catReq[k]) catOk=false;
+  });
+  var itemsOk = items>=CFG.min;
+  return {total:total,budget:budget,custPct:custPct,tierPct:tierPct,discountValue:discountValue,giftBudget:giftBudget,
+          over:over,net:net,items:items,giftUsed:giftUsed,tier:tier,catCount:catCount,catReq:catReq,catOk:catOk,itemsOk:itemsOk};
 }
 function renderPanel(){
   var b=document.getElementById("panelBody");
@@ -246,41 +271,44 @@ function renderPanel(){
   var effPct=d.total>0?(d.budget/d.total*100):0;
   var maxT=CFG.t[CFG.t.length-1]||1;
   var fillPct=Math.min(100, d.total/maxT*100);
-  var tierTxt;
-  if(d.tier===0){ var need=CFG.t[0]-d.total; tierTxt='עוד <b>'+money(need)+'</b> למדרגה הראשונה ('+money(CFG.t[0])+' = '+pctStr(CFG.tierDisc[0])+'%)'; }
-  else if(d.tier<CFG.t.length){ var need2=CFG.t[d.tier]-d.total; tierTxt='מדרגה <b>'+d.tier+'</b> ('+pctStr(d.custPct)+'%) ✓ · עוד <b>'+money(need2)+'</b> ל-'+pctStr(CFG.tierDisc[d.tier])+'%'; }
-  else { tierTxt='🏆 מדרגה מקסימלית — <b>'+pctStr(d.custPct)+'%</b> + מתנה!'; }
-  var itemsOk=d.items>=CFG.min&&d.items<=CFG.max;
-  var itemsNote=d.items<CFG.min?(" (מינ' "+CFG.min+")"):(d.items>CFG.max?(" (מקס' "+CFG.max+")"):" ✓");
+  // איזון קטגוריות
+  var co=["מעיין יבוא","מוצרים לשקל","קידום מוצרים"];
+  Object.keys(catShares).forEach(function(k){if(co.indexOf(k)<0)co.push(k);});
+  var catRows="";
+  co.forEach(function(k){ if(catShares[k]==null)return;
+    var have=d.catCount[k]||0, need=d.catReq[k]||0, ok=have>=need;
+    catRows+='<div class="catrow"><span class="l">'+k+' <small>('+Math.round(catShares[k]*100)+'%)</small></span><span class="v '+(ok?"ok":"bad")+'">'+have+' / '+need+' '+(ok?'✓':'✗')+'</span></div>';
+  });
   var remain=d.giftBudget-d.giftUsed, gbCls,gbTxt;
   if(d.giftBudget<=0){gbCls="over";gbTxt="⚠️ אין תקציב למתנה (ההנחה שווה/חורגת מהתקציב)";}
   else if(d.giftUsed===0){gbCls="room";gbTxt="🎁 תקציב מתנה: "+money(d.giftBudget)+" — עבור ללשונית המתנה";}
   else if(remain>=-0.5){gbCls=Math.abs(remain)<1?"ok":"room";gbTxt="🎁 מתנה: "+money(d.giftUsed)+" / "+money(d.giftBudget)+" · נותר "+money(Math.max(0,remain));}
   else {gbCls="over";gbTxt="⚠️ המתנה חורגת ב-"+money(-remain);}
-  var custHtml = d.tier>0 ?
-    ('<div class="row"><span class="l">הנחה ללקוח</span><span class="v" style="color:var(--green);font-size:18px">'+pctStr(d.custPct)+'%</span></div>'+
-     '<div class="net"><span class="l">מחיר לתשלום</span><span class="v">'+money(d.net)+'</span></div>'+
-     '<div class="box gift"><div class="bt">🎁 מתנה ללקוח — שווי</div><div class="big">'+money(d.giftBudget)+'</div><div class="sub">הסוכן מרכיב מתנה עד הסכום</div></div>')
-    : '<div class="giftbar room">עוד לא הושגה מדרגה — אין הנחה/מתנה עדיין</div>';
+  var resetLink = (manualDisc!=null) ? ' <a onclick="resetDisc()" style="color:var(--blue);cursor:pointer;font-size:10px">↺ '+pctStr(d.tierPct)+'%</a>' : '';
   b.innerHTML=
    '<div class="prg"><div class="fill" style="width:'+fillPct+'%"></div></div>'+
    '<div class="prg-lbls"><span>0</span><span>'+money(CFG.t[0])+'</span><span>'+money(CFG.t[1]||0)+'</span><span>'+money(maxT)+'</span></div>'+
-   '<div class="tier-now">'+tierTxt+'</div>'+
-   '<div class="row items"><span class="l">פריטים בעסקה</span><span class="v '+(itemsOk?"ok":"bad")+'">'+d.items+itemsNote+'</span></div>'+
    '<div class="row"><span class="l">סכום מחירון</span><span class="v">'+money(d.total)+'</span></div>'+
+   '<div class="row items"><span class="l">פריטים (מינ\' '+CFG.min+')</span><span class="v '+(d.itemsOk?"ok":"bad")+'">'+d.items+(d.itemsOk?' ✓':'')+'</span></div>'+
+   '<div class="catbox"><div class="catbox-t">איזון קטגוריות '+(d.catOk?'<span style="color:var(--green)">✓</span>':'<span style="color:#dc2626">✗ חסרים</span>')+'</div>'+catRows+'</div>'+
    '<div class="sep"></div>'+
+   '<div class="box disc"><div class="bt">💰 תקציב הנחה (סך המבצעים)</div><div class="big">'+money(d.budget)+'</div><div class="sub">≈ '+pctStr(effPct)+'% · אתה מחליט כמה הנחה וכמה מתנה</div></div>'+
    '<div class="cust-label">📤 מה הלקוח מקבל</div>'+
-   custHtml+
-   (d.tier>0?'<div class="giftbar '+gbCls+'">'+gbTxt+'</div>':'')+
+   '<div class="row"><span class="l">הנחה ללקוח</span><span class="v"><input type="number" value="'+pctStr(d.custPct)+'" min="0" step="0.5" onchange="setDisc(this.value)" style="width:54px;text-align:center;border:1.5px solid var(--line);border-radius:7px;padding:3px;font-weight:800;font-family:inherit">%'+resetLink+'</span></div>'+
+   '<div class="net"><span class="l">מחיר לתשלום</span><span class="v">'+money(d.net)+'</span></div>'+
+   '<div class="box gift"><div class="bt">🎁 מתנה ללקוח — שווי</div><div class="big">'+money(d.giftBudget)+'</div><div class="sub">הסוכן מרכיב מתנה עד הסכום</div></div>'+
+   '<div class="giftbar '+gbCls+'">'+gbTxt+'</div>'+
    '<button class="btn btn-send" onclick="sendDeal()">📲 שלח הצעה ללקוח</button>'+
    '<details class="internal"><summary>🔒 פנימי — לא נשלח ללקוח</summary>'+
-     '<div class="row"><span class="l">תקציב הנחה (מהמבצעים)</span><span class="v">'+money(d.budget)+' · '+pctStr(effPct)+'%</span></div>'+
+     '<div class="row"><span class="l">תקציב (סך המבצעים)</span><span class="v">'+money(d.budget)+' · '+pctStr(effPct)+'%</span></div>'+
      '<div class="row"><span class="l">ניתן כהנחה ('+pctStr(d.custPct)+'%)</span><span class="v">'+money(d.discountValue)+'</span></div>'+
      '<div class="row"><span class="l">נותר למתנה</span><span class="v">'+money(d.giftBudget)+'</span></div>'+
-     (d.over?'<div class="giftbar over">⚠️ ההנחה חורגת מהתקציב — הוסף מוצרים עם מבצע גבוה</div>':'')+
+     (d.over?'<div class="giftbar over">⚠️ ההנחה חורגת מהתקציב</div>':'')+
    '</details>'+
-   (itemsOk?'':'<div class="note">⚠️ מספר הפריטים מחוץ לטווח '+CFG.min+'-'+CFG.max+'.</div>');
+   (!d.itemsOk?'<div class="note">⚠️ מינימום '+CFG.min+' פריטים.</div>':(!d.catOk?'<div class="note">⚠️ חסרים פריטים באיזון הקטגוריות.</div>':''));
 }
+function setDisc(v){var n=parseFloat(v); manualDisc=isNaN(n)?null:Math.max(0,n); renderPanel();}
+function resetDisc(){manualDisc=null;renderPanel();}
 
 function sendDeal(){
   var d=computeDeal(); if(!d.items){alert("העסקה ריקה");return;}
@@ -304,12 +332,12 @@ function sendDeal(){
 function openCfg(){
   document.getElementById("cT1").value=CFG.t[0];document.getElementById("cT2").value=CFG.t[1];document.getElementById("cT3").value=CFG.t[2];
   document.getElementById("cD1").value=CFG.tierDisc[0];document.getElementById("cD2").value=CFG.tierDisc[1];document.getElementById("cD3").value=CFG.tierDisc[2];
-  document.getElementById("cMin").value=CFG.min;document.getElementById("cMax").value=CFG.max;document.getElementById("cfgModal").classList.add("open");
+  document.getElementById("cMin").value=CFG.min;document.getElementById("cfgModal").classList.add("open");
 }
 function saveCfg(){
   CFG.t=[parseFloat(document.getElementById("cT1").value)||5000,parseFloat(document.getElementById("cT2").value)||10000,parseFloat(document.getElementById("cT3").value)||15000];
   CFG.tierDisc=[parseFloat(document.getElementById("cD1").value)||0,parseFloat(document.getElementById("cD2").value)||0,parseFloat(document.getElementById("cD3").value)||0];
-  CFG.min=parseInt(document.getElementById("cMin").value)||10; CFG.max=parseInt(document.getElementById("cMax").value)||30;
+  CFG.min=parseInt(document.getElementById("cMin").value)||30;
   try{localStorage.setItem("dealCfg",JSON.stringify(CFG));}catch(e){}
   document.getElementById("cfgModal").classList.remove("open");
   renderPanel();
